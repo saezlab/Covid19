@@ -1,4 +1,4 @@
-## Applying Saezlab Tools to Covid-19 related Datasets
+# Applying Saezlab Tools to Covid-19 related Datasets
 
 This repository contains the scripts used to apply some of our tools to Covid-19
 related datasets. In particular, we take the RNAseq data from the study: 
@@ -15,6 +15,8 @@ We focused in the experiments containing these conditions:
 SARS-CoV-2. 
 
 + **A549** alveolar cancer cell line: mock treated vs infected with SARS-CoV-2.   
+
+## Scripts and Analysis
 
 We detail below the different scripts and analysis performed:
 
