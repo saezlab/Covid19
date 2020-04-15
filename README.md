@@ -22,10 +22,14 @@ We detail below the different scripts and analysis performed:
 **DESeq2** R package. This is aligned with the script of Agatha Treveil from 
 Tamas' group. 
 
+<https://github.com/saezlab/Covid19/blob/master/DifferentialExpressionAnalysis.md>
+
 + Then, we used the normalised counts and the stastics generated in the previous 
 script to run **Dorothea** and **Progeny**. Doing so, we estimated Transcription
 factors activity and pathway activity in the SARS-CoV-2 infected lines in 
 comparison with the mock treated. 
+
+<https://github.com/saezlab/Covid19/blob/master/ProgenyDorothea.md>
 
 + We finally run **CARNIVAL** using different perturbations conditions related 
 to the virus action. In order to do so, we used TF and Pathway activity scores 
