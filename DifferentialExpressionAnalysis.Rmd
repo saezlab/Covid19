@@ -1,0 +1,191 @@
+---
+title: "SARS-CoV-2 dataset: Differential expression analysis"
+author: "Alberto Valdeolivas: alberto.valdeolivas@bioquant.uni-heidelberg.de; Date: "
+date: "14/04/2020"
+output: github_document
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### License Info
+
+This program is free software: you can redistribute it and/or modify it under 
+the terms of the GNU General Public License as published by the Free Software 
+Foundation, either version 3 of the License, or (at your option) any later 
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY 
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR 
+A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+Please check http://www.gnu.org/licenses/.
+
+## Introduction
+
+The present script takes the RNAseq data from the study *"SARS-CoV-2 launches* 
+*a unique transcriptional signature from in vitro, ex vivo, and in vivo systems"* 
+
+<https://www.biorxiv.org/content/10.1101/2020.03.24.004655v1>
+
+<https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE147507>
+
+It performs a differential expression analysis to compare:
+
++ Human lung epithelial cells (NHBE): mock treated vs infected with SARS-CoV-2. 
+
++ A549 alveolar cancer cell line: mock treated vs infected with SARS-CoV-2.   
+
+We used the *DESeq2* R package.
+
+## Getting Started
+
+We first load the required libraries. 
+
+```{r, message=FALSE}
+library(dplyr)
+library(DESeq2)
+```
+
+We also read the raw counts from the original experiment (GSE147507)
+
+```{r}
+## Raw counts table
+GSE147507_raw_counts <- 
+    read.csv("RawData/GSE147507_RawReadCounts_Human.tsv", sep = "\t")
+```
+
+
+## NHBE mock treated vs infected with SARS-CoV-2 
+
+We first select the Series 1, which corresponds to independent biological 
+triplicates of primary human lung epithelium (NHBE) that were either mock 
+treated or infected with SARS-CoV-2. 
+
+```{r, message=FALSE}
+## We select series 1 as described above.
+count_NHBEvsCOV2_df <- GSE147507_raw_counts[,c(2:7)]
+row.names(count_NHBEvsCOV2_df) <- GSE147507_raw_counts$X
+```
+
+We create a dataframe describing the experimental design. 
+
+```{r}
+targets_NHBEvsCOV2 <- 
+    as.data.frame(matrix(NA,length(names(count_NHBEvsCOV2_df)),1))
+names(targets_NHBEvsCOV2) <- c("condition")
+row.names(targets_NHBEvsCOV2) <- names(count_NHBEvsCOV2_df)
+targets_NHBEvsCOV2$condition <- 
+    gsub("Series1_", "", row.names(targets_NHBEvsCOV2))
+targets_NHBEvsCOV2$condition <- 
+    factor(gsub("_[1-3]$", "", targets_NHBEvsCOV2$condition))
+targets_NHBEvsCOV2
+```
+
+Then, we perform the differential expression analysis with *DESeq2*
+
+```{r, message=FALSE}
+## Create deseq2 object
+dds_NHBEvsCOV2 <- 
+    DESeqDataSetFromMatrix(countData = as.matrix(count_NHBEvsCOV2_df), 
+    colData = targets_NHBEvsCOV2, design = ~ condition)
+
+## Set control
+dds_NHBEvsCOV2$condition <- relevel(dds_NHBEvsCOV2$condition, 
+    ref = levels(targets_NHBEvsCOV2$condition)[1])
+
+## Carry out diff exp
+dds_NHBEvsCOV2 <- DESeq(dds_NHBEvsCOV2)
+```
+
+We finally save the table with the results of the analysis and the normalised
+counts
+
+```{r}
+## See the comparisons carried out
+comparison_NHBEvsCOV2 <- resultsNames(dds_NHBEvsCOV2)
+
+## Get results table
+results_NHBEvsCOV2 <- 
+    results(dds_NHBEvsCOV2, name=comparison_NHBEvsCOV2[2])
+
+## Save the object
+saveRDS(results_NHBEvsCOV2, file="IntermediateFiles/dds_results_NHBEvsCOV2.rds")
+
+## Extract normalised counts data
+dds_NHBEvsCOV2 <- estimateSizeFactors(dds_NHBEvsCOV2)
+norm_counts_NHBEvsCOV2 <- counts(dds_NHBEvsCOV2, normalized = TRUE)
+saveRDS(norm_counts_NHBEvsCOV2, 
+    file="IntermediateFiles/counts_norm_NHBEvsCOV2.rds")
+```
+
+## A549 mock treated vs infected with SARS-CoV-2 
+
+Then, we select the Series 2, which corresponds to independent biological 
+triplicates of the A549 alveolar cancer cell line that were either mock 
+treated or infected with SARS-CoV-2. 
+
+```{r, message=FALSE}
+## We select series 2 as described above.
+count_A549vsCOV2_df <- GSE147507_raw_counts[,c(8:13)]
+row.names(count_A549vsCOV2_df) <- GSE147507_raw_counts$X
+```
+
+We create a dataframe describing the experimental design. 
+
+```{r}
+targets_A549vsCOV2 <- 
+    as.data.frame(matrix(NA,length(names(count_A549vsCOV2_df)),1))
+names(targets_A549vsCOV2) <- c("condition")
+row.names(targets_A549vsCOV2) <- names(count_A549vsCOV2_df)
+targets_A549vsCOV2$condition <- 
+    gsub("Series2_", "", row.names(targets_A549vsCOV2))
+targets_A549vsCOV2$condition <- 
+    factor(gsub("_[1-3]$", "", targets_A549vsCOV2$condition))
+targets_A549vsCOV2
+```
+
+Then, we perform the differential expression analysis with *DESeq2*
+
+```{r, message=FALSE}
+## Create deseq2 object
+dds_A549vsCOV2 <- 
+    DESeqDataSetFromMatrix(countData = as.matrix(count_A549vsCOV2_df), 
+    colData = targets_A549vsCOV2, design = ~ condition)
+
+## Set control
+dds_A549vsCOV2$condition <- relevel(dds_A549vsCOV2$condition, 
+    ref = levels(targets_A549vsCOV2$condition)[1])
+
+## Carry out diff exp
+dds_A549vsCOV2 <- DESeq(dds_A549vsCOV2)
+```
+
+We finally save the table with the results of the analysis and the normalised 
+counts:
+
+```{r}
+## See the comparisons carried out
+comparison_A549vsCOV2 <- resultsNames(dds_A549vsCOV2)
+
+## Get results table
+results_A549vsCOV2 <- 
+    results(dds_A549vsCOV2, name=comparison_A549vsCOV2[2])
+
+## Save the object
+saveRDS(results_A549vsCOV2, file="IntermediateFiles/dds_results_A549vsCOV2.rds")
+
+## Extract normalised counts data
+dds_A549vsCOV2 <- estimateSizeFactors(dds_A549vsCOV2)
+norm_counts_A549vsCOV2 <- counts(dds_A549vsCOV2, normalized = TRUE)
+saveRDS(norm_counts_A549vsCOV2, 
+    file="IntermediateFiles/counts_norm_A549vsCOV2.rds")
+```
+
+## Session Info Details
+
+```{r, echo=FALSE, eval=TRUE}
+sessionInfo()
+```
+
