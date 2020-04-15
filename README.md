@@ -36,7 +36,10 @@ comparison with the mock treated.
 + We finally run **CARNIVAL** using different perturbations conditions related 
 to the virus action. In order to do so, we used TF and Pathway activity scores 
 generated in the previous script. CARNIVAL also requires a prior knowledge 
-network that was extracted from **Omnipath** using **OmnipathR**. 
+network that was extracted from **Omnipath** using **OmnipathR** in line with
+the network used by Dezso from Tamas' group. 
+
+
 
 ### License Info
 
