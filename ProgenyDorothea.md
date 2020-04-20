@@ -319,7 +319,7 @@ tf_activities_NHBEvsCOV2 <- as.vector(tf_activities_NHBEvsCOV2_counts_filter)
 
 paletteLength <- 100
 myColor <- 
-    colorRampPalette(c("indianred", "whitesmoke","darkblue"))(paletteLength)
+    colorRampPalette(c("darkblue", "whitesmoke","indianred"))(paletteLength)
 
 dorotheaBreaks <- c(seq(min(tf_activities_NHBEvsCOV2), 0, 
     length.out=ceiling(paletteLength/2) + 1),
@@ -328,7 +328,7 @@ dorotheaBreaks <- c(seq(min(tf_activities_NHBEvsCOV2), 0,
     length.out=floor(paletteLength/2)))
 dorothea_hmap <- pheatmap(tf_activities_NHBEvsCOV2_counts_filter,
     fontsize=14, fontsize_row = 8, fontsize_col = 8, 
-    color=myColor, breaks = dorotheaBreaks, 
+    color=myColor, breaks = dorotheaBreaks,,
     main = "Dorothea ABC", angle_col = 45,
     treeheight_col = 0,  border_color = NA)
 ```
@@ -403,7 +403,7 @@ tf_activities_A549vsCOV2 <- as.vector(tf_activities_A549vsCOV2_counts_filter)
 
 paletteLength <- 100
 myColor <- 
-    colorRampPalette(c("indianred", "whitesmoke","darkblue"))(paletteLength)
+    colorRampPalette(c("darkblue", "whitesmoke","indianred"))(paletteLength)
 
 dorotheaBreaks <- c(seq(min(tf_activities_A549vsCOV2), 0, 
     length.out=ceiling(paletteLength/2) + 1),
@@ -412,7 +412,7 @@ dorotheaBreaks <- c(seq(min(tf_activities_A549vsCOV2), 0,
     length.out=floor(paletteLength/2)))
 dorothea_hmap <- pheatmap(tf_activities_A549vsCOV2_counts_filter,
     fontsize=14, fontsize_row = 8, fontsize_col = 8, 
-    color=myColor, breaks = dorotheaBreaks, 
+    color=myColor, breaks = dorotheaBreaks,
     main = "Dorothea ABC", angle_col = 45,
     treeheight_col = 0,  border_color = NA)
 ```
