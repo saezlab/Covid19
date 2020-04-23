@@ -16,3 +16,7 @@ IntermediateFiles/dds_results_NHBEvsCOV2.rds
 IntermediateFiles/dds_results_A549vsCOV2.rds
 IntermediateFiles/counts_norm_NHBEvsCOV2.rds
 IntermediateFiles/counts_norm_A549vsCOV2.rds
+RawData/GO_CELL_CYCLE_ARREST.gmt
+RawData/HALLMARK_G2M_CHECKPOINT.gmt
+RawData/KEGG_CELL_CYCLE.gmt
+PruebaCellcycle.R
