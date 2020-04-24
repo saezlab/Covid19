@@ -38,6 +38,14 @@ which **CARNIVAL** was executed for the two condiitons under study:
   - A549 alveolar cancer cell line: mock treated vs infected with
     SARS-CoV-2.
 
+  - A549 cell line does not express ACE2, the receptor used by
+    SARS-CoV-2 to penetrate into human cells. Therefore A549 were also
+    transduced with ACE2 and then mock treated or infected with
+    SARS-CoV-2
+
+  - Calu-3 human lung epithelial cancer cell line: mock treated vs
+    infected with SARS-CoV-2.
+
 ## Reading input data for Enrichment Analysis
 
 To perform the enrichment analysis, we need to read the following input
@@ -117,14 +125,15 @@ second set contains all the genes in our prior knowledge network which
 are used as the backgroud.
 
 ``` r
-## NHBE NodesNHBE_ACE2input
+## NHBE 
 CarnivalResultsNHBE_noinput <- readRDS("ResultsCARNIVAL/NHBE_noinput.rds")
 NodesNHBE_noinput <- extractCARNIVALnodes(CarnivalResultsNHBE_noinput)    
 CarnivalResultsNHBE_ACE2input <- readRDS("ResultsCARNIVAL/NHBE_ACE2input.rds")
 NodesNHBE_ACE2input <- extractCARNIVALnodes(CarnivalResultsNHBE_ACE2input)  
 CarnivalResultsNHBE_HostVirusinput <- 
    readRDS("ResultsCARNIVAL/NHBE_HostVirusinput.rds")
-NodesNHBE_HostVirusinput <- extractCARNIVALnodes(CarnivalResultsNHBE_HostVirusinput)  
+NodesNHBE_HostVirusinput <- 
+    extractCARNIVALnodes(CarnivalResultsNHBE_HostVirusinput)  
 
 ## A549
 CarnivalResultsA549_noinput <- readRDS("ResultsCARNIVAL/A549_noinput.rds")
@@ -133,7 +142,31 @@ CarnivalResultsA549_ACE2input <- readRDS("ResultsCARNIVAL/A549_ACE2input.rds")
 NodesA549_ACE2input <- extractCARNIVALnodes(CarnivalResultsA549_ACE2input)  
 CarnivalResultsA549_HostVirusinput <- 
     readRDS("ResultsCARNIVAL/A549_HostVirusinput.rds")
-NodesA549_HostVirusinput <- extractCARNIVALnodes(CarnivalResultsA549_HostVirusinput)  
+NodesA549_HostVirusinput <- 
+    extractCARNIVALnodes(CarnivalResultsA549_HostVirusinput)  
+
+## A549 transfected with ACE2
+CarnivalResultsA549ACE2_noinput <- 
+    readRDS("ResultsCARNIVAL/A549ACE2_noinput.rds")
+NodesA549ACE2_noinput <- extractCARNIVALnodes(CarnivalResultsA549ACE2_noinput)    
+CarnivalResultsA549ACE2_ACE2input <- 
+    readRDS("ResultsCARNIVAL/A549ACE2_ACE2input.rds")
+NodesA549ACE2_ACE2input <- 
+    extractCARNIVALnodes(CarnivalResultsA549ACE2_ACE2input)  
+CarnivalResultsA549ACE2_HostVirusinput <- 
+    readRDS("ResultsCARNIVAL/A549ACE2_HostVirusinput.rds")
+NodesA549ACE2_HostVirusinput <- 
+    extractCARNIVALnodes(CarnivalResultsA549ACE2_HostVirusinput) 
+
+## CALU-3
+CarnivalResultsCALU3_noinput <- readRDS("ResultsCARNIVAL/CALU3_noinput.rds")
+NodesCALU3_noinput <- extractCARNIVALnodes(CarnivalResultsCALU3_noinput)    
+CarnivalResultsCALU3_ACE2input <- readRDS("ResultsCARNIVAL/CALU3_ACE2input.rds")
+NodesCALU3_ACE2input <- extractCARNIVALnodes(CarnivalResultsCALU3_ACE2input)  
+CarnivalResultsCALU3_HostVirusinput <- 
+   readRDS("ResultsCARNIVAL/CALU3_HostVirusinput.rds")
+NodesCALU3_HostVirusinput <- 
+    extractCARNIVALnodes(CarnivalResultsCALU3_HostVirusinput)  
 ```
 
 ### Reading Pathway data sets from MSigDB
@@ -144,7 +177,7 @@ different resources and the genes that are known to be involved in those
 pathways.
 
 ``` r
-pathways <- gmt_to_csv("IntermediateFiles/c2.cp.v7.0.symbols.gmt")
+pathways <- gmt_to_csv("RawData/c2.cp.v7.0.symbols.gmt")
 ```
 
     ##   |                                                                              |                                                                      |   0%  |                                                                              |                                                                      |   1%  |                                                                              |=                                                                     |   1%  |                                                                              |=                                                                     |   2%  |                                                                              |==                                                                    |   2%  |                                                                              |==                                                                    |   3%  |                                                                              |==                                                                    |   4%  |                                                                              |===                                                                   |   4%  |                                                                              |===                                                                   |   5%  |                                                                              |====                                                                  |   5%  |                                                                              |====                                                                  |   6%  |                                                                              |=====                                                                 |   6%  |                                                                              |=====                                                                 |   7%  |                                                                              |=====                                                                 |   8%  |                                                                              |======                                                                |   8%  |                                                                              |======                                                                |   9%  |                                                                              |=======                                                               |   9%  |                                                                              |=======                                                               |  10%  |                                                                              |=======                                                               |  11%  |                                                                              |========                                                              |  11%  |                                                                              |========                                                              |  12%  |                                                                              |=========                                                             |  12%  |                                                                              |=========                                                             |  13%  |                                                                              |=========                                                             |  14%  |                                                                              |==========                                                            |  14%  |                                                                              |==========                                                            |  15%  |                                                                              |===========                                                           |  15%  |                                                                              |===========                                                           |  16%  |                                                                              |============                                                          |  16%  |                                                                              |============                                                          |  17%  |                                                                              |============                                                          |  18%  |                                                                              |=============                                                         |  18%  |                                                                              |=============                                                         |  19%  |                                                                              |==============                                                        |  19%  |                                                                              |==============                                                        |  20%  |                                                                              |==============                                                        |  21%  |                                                                              |===============                                                       |  21%  |                                                                              |===============                                                       |  22%  |                                                                              |================                                                      |  22%  |                                                                              |================                                                      |  23%  |                                                                              |================                                                      |  24%  |                                                                              |=================                                                     |  24%  |                                                                              |=================                                                     |  25%  |                                                                              |==================                                                    |  25%  |                                                                              |==================                                                    |  26%  |                                                                              |===================                                                   |  26%  |                                                                              |===================                                                   |  27%  |                                                                              |===================                                                   |  28%  |                                                                              |====================                                                  |  28%  |                                                                              |====================                                                  |  29%  |                                                                              |=====================                                                 |  29%  |                                                                              |=====================                                                 |  30%  |                                                                              |=====================                                                 |  31%  |                                                                              |======================                                                |  31%  |                                                                              |======================                                                |  32%  |                                                                              |=======================                                               |  32%  |                                                                              |=======================                                               |  33%  |                                                                              |=======================                                               |  34%  |                                                                              |========================                                              |  34%  |                                                                              |========================                                              |  35%  |                                                                              |=========================                                             |  35%  |                                                                              |=========================                                             |  36%  |                                                                              |==========================                                            |  36%  |                                                                              |==========================                                            |  37%  |                                                                              |==========================                                            |  38%  |                                                                              |===========================                                           |  38%  |                                                                              |===========================                                           |  39%  |                                                                              |============================                                          |  39%  |                                                                              |============================                                          |  40%  |                                                                              |============================                                          |  41%  |                                                                              |=============================                                         |  41%  |                                                                              |=============================                                         |  42%  |                                                                              |==============================                                        |  42%  |                                                                              |==============================                                        |  43%  |                                                                              |==============================                                        |  44%  |                                                                              |===============================                                       |  44%  |                                                                              |===============================                                       |  45%  |                                                                              |================================                                      |  45%  |                                                                              |================================                                      |  46%  |                                                                              |=================================                                     |  46%  |                                                                              |=================================                                     |  47%  |                                                                              |=================================                                     |  48%  |                                                                              |==================================                                    |  48%  |                                                                              |==================================                                    |  49%  |                                                                              |===================================                                   |  49%  |                                                                              |===================================                                   |  50%  |                                                                              |===================================                                   |  51%  |                                                                              |====================================                                  |  51%  |                                                                              |====================================                                  |  52%  |                                                                              |=====================================                                 |  52%  |                                                                              |=====================================                                 |  53%  |                                                                              |=====================================                                 |  54%  |                                                                              |======================================                                |  54%  |                                                                              |======================================                                |  55%  |                                                                              |=======================================                               |  55%  |                                                                              |=======================================                               |  56%  |                                                                              |========================================                              |  56%  |                                                                              |========================================                              |  57%  |                                                                              |========================================                              |  58%  |                                                                              |=========================================                             |  58%  |                                                                              |=========================================                             |  59%  |                                                                              |==========================================                            |  59%  |                                                                              |==========================================                            |  60%  |                                                                              |==========================================                            |  61%  |                                                                              |===========================================                           |  61%  |                                                                              |===========================================                           |  62%  |                                                                              |============================================                          |  62%  |                                                                              |============================================                          |  63%  |                                                                              |============================================                          |  64%  |                                                                              |=============================================                         |  64%  |                                                                              |=============================================                         |  65%  |                                                                              |==============================================                        |  65%  |                                                                              |==============================================                        |  66%  |                                                                              |===============================================                       |  66%  |                                                                              |===============================================                       |  67%  |                                                                              |===============================================                       |  68%  |                                                                              |================================================                      |  68%  |                                                                              |================================================                      |  69%  |                                                                              |=================================================                     |  69%  |                                                                              |=================================================                     |  70%  |                                                                              |=================================================                     |  71%  |                                                                              |==================================================                    |  71%  |                                                                              |==================================================                    |  72%  |                                                                              |===================================================                   |  72%  |                                                                              |===================================================                   |  73%  |                                                                              |===================================================                   |  74%  |                                                                              |====================================================                  |  74%  |                                                                              |====================================================                  |  75%  |                                                                              |=====================================================                 |  75%  |                                                                              |=====================================================                 |  76%  |                                                                              |======================================================                |  76%  |                                                                              |======================================================                |  77%  |                                                                              |======================================================                |  78%  |                                                                              |=======================================================               |  78%  |                                                                              |=======================================================               |  79%  |                                                                              |========================================================              |  79%  |                                                                              |========================================================              |  80%  |                                                                              |========================================================              |  81%  |                                                                              |=========================================================             |  81%  |                                                                              |=========================================================             |  82%  |                                                                              |==========================================================            |  82%  |                                                                              |==========================================================            |  83%  |                                                                              |==========================================================            |  84%  |                                                                              |===========================================================           |  84%  |                                                                              |===========================================================           |  85%  |                                                                              |============================================================          |  85%  |                                                                              |============================================================          |  86%  |                                                                              |=============================================================         |  86%  |                                                                              |=============================================================         |  87%  |                                                                              |=============================================================         |  88%  |                                                                              |==============================================================        |  88%  |                                                                              |==============================================================        |  89%  |                                                                              |===============================================================       |  89%  |                                                                              |===============================================================       |  90%  |                                                                              |===============================================================       |  91%  |                                                                              |================================================================      |  91%  |                                                                              |================================================================      |  92%  |                                                                              |=================================================================     |  92%  |                                                                              |=================================================================     |  93%  |                                                                              |=================================================================     |  94%  |                                                                              |==================================================================    |  94%  |                                                                              |==================================================================    |  95%  |                                                                              |===================================================================   |  95%  |                                                                              |===================================================================   |  96%  |                                                                              |====================================================================  |  96%  |                                                                              |====================================================================  |  97%  |                                                                              |====================================================================  |  98%  |                                                                              |===================================================================== |  98%  |                                                                              |===================================================================== |  99%  |                                                                              |======================================================================|  99%  |                                                                              |======================================================================| 100%
@@ -163,6 +196,13 @@ dds_NHBEvsCOV2 <- readRDS("IntermediateFiles/dds_results_NHBEvsCOV2.rds") %>%
 dds_A549vsCOV2 <- readRDS("IntermediateFiles/dds_results_A549vsCOV2.rds") %>%
     as.data.frame() %>% 
     select(stat)
+dds_A549ACE2vsCOV2 <- 
+    readRDS("IntermediateFiles/dds_results_A549ACE2vsCOV2.rds") %>%
+    as.data.frame() %>% 
+    select(stat)
+dds_CALU3vsCOV2 <- readRDS("IntermediateFiles/dds_results_CALU3vsCOV2.rds") %>%
+    as.data.frame() %>% 
+    select(stat)
 ```
 
 ## Performing Enrichment Analysis and plotting the Results
@@ -172,6 +212,8 @@ a list of significant genes (CARNIVAL nodes) and a gene set collection
 (background). It uses Fisher’s exact test.
 
 ### CARNIVAL output with no perturbation
+
+#### NHBE cell line
 
 First for the NHBE cell line
 
@@ -218,6 +260,8 @@ p_NHBE_noinput <- BarplotEnrichment(PathwaysSelect_NHBE_noinput,
 
 ![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
+#### A549 cell line
+
 Then, for the A549 cell line
 
 ``` r
@@ -262,7 +306,101 @@ p_A549_noinput <- BarplotEnrichment(PathwaysSelect_A549_noinput,
 
 ![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
+#### A549 cell line transfected with ACE2
+
+Then, for the A549 cell line transfected with ACE2
+
+``` r
+## We run GSA hyper Geometric test
+sig_pathways_A549ACE2_noinput <- runGSAhyper(NodesA549ACE2_noinput$sucesses, 
+    universe = NodesA549ACE2_noinput$bg, gsc = loadGSC(pathways))
+sig_pathways_df_A549ACE2_noinput <- as.data.frame(sig_pathways_A549ACE2_noinput$resTab)
+
+## We map the t-stastic into the resulted enriched pathways.
+sig_pathways_df_A549ACE2_noinput$sign <- 
+    unlist(lapply(row.names(sig_pathways_df_A549ACE2_noinput), 
+    function(x, kinases, pathways){
+        return(mean(dds_A549ACE2vsCOV2[row.names(dds_A549ACE2vsCOV2) %in% pathways[pathways$term == x,1],1], na.rm = TRUE))
+    },kinases = kinases, pathways = pathways))
+
+sig_pathways_df_A549ACE2_noinput <- 
+    sig_pathways_df_A549ACE2_noinput[!is.nan(sig_pathways_df_A549ACE2_noinput$sign),]
+```
+
+We format the results and we prepare them to be plotted. For
+visualization purposes, we just select pathways with adjusted p-values
+lower than 0.001.
+
+``` r
+PathwaysSelect_A549ACE2_noinput <- sig_pathways_df_A549ACE2_noinput %>%
+    tibble::rownames_to_column(var = "pathway") %>%
+    dplyr::select(pathway, `p-value`, `Adjusted p-value`, sign) %>%
+    dplyr::filter(`Adjusted p-value` <= 0.05) %>%
+    dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>% 
+    dplyr::mutate(pathway = as.factor(pathway))
+```
+
+We finally plot the results highlighting the most relevant pathways.
+
+``` r
+Interesting_pathways_A549ACE2_noinput <- c("")
+
+p_A549ACE2_noinput <- BarplotEnrichment(PathwaysSelect_A549ACE2_noinput, 
+    Interesting_pathways_A549ACE2_noinput)
+```
+
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+#### CALU-3 cell line
+
+Now for the CALU-3 cell line
+
+``` r
+## We run GSA hyper Geometric test
+sig_pathways_CALU3_noinput <- runGSAhyper(NodesCALU3_noinput$sucesses, 
+    universe = NodesCALU3_noinput$bg, gsc = loadGSC(pathways))
+sig_pathways_df_CALU3_noinput <- as.data.frame(sig_pathways_CALU3_noinput$resTab)
+
+## We map the t-stastic into the resulted enriched pathways.
+sig_pathways_df_CALU3_noinput$sign <- 
+    unlist(lapply(row.names(sig_pathways_df_CALU3_noinput), 
+    function(x, kinases, pathways){
+        return(mean(dds_CALU3vsCOV2[row.names(dds_CALU3vsCOV2) %in% pathways[pathways$term == x,1],1], na.rm = TRUE))
+    },kinases = kinases, pathways = pathways))
+
+sig_pathways_df_CALU3_noinput <- 
+    sig_pathways_df_CALU3_noinput[!is.nan(sig_pathways_df_CALU3_noinput$sign),]
+```
+
+We format the results and we prepare them to be plotted. For
+visualization purposes, we just select pathways with adjusted p-values
+lower than 0.0001.
+
+``` r
+PathwaysSelect_CALU3_noinput <- sig_pathways_df_CALU3_noinput %>%
+    tibble::rownames_to_column(var = "pathway") %>%
+    dplyr::select(pathway, `p-value`, `Adjusted p-value`, sign) %>%
+    dplyr::filter(`Adjusted p-value` <= 0.0001) %>%
+    dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>% 
+    dplyr::mutate(pathway = as.factor(pathway))
+```
+
+We finally plot the results highlighting the most relevant pathways.
+
+``` r
+Interesting_pathways_CALU3_noinput <- c("PID_IL6_7_PATHWAY", 
+    "PID_IFNG_PATHWAY", "PID_IL4_2PATHWAY", 
+    "REACTOME_INTERLEUKIN_17_SIGNALING")
+
+p_CALU3_noinput <- BarplotEnrichment(PathwaysSelect_CALU3_noinput, 
+    Interesting_pathways_CALU3_noinput)
+```
+
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
 ### CARNIVAL output with ACE2 as perturbation
+
+#### NHBE cell line
 
 First for the NHBE cell line
 
@@ -308,7 +446,9 @@ p_NHBE_ACE2input <- BarplotEnrichment(PathwaysSelect_NHBE_ACE2input,
     Interesting_pathways_NHBE_ACE2input)
 ```
 
-![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+
+#### A549 cell line
 
 Then, for the A549 cell line
 
@@ -353,9 +493,103 @@ p_A549_ACE2input <- BarplotEnrichment(PathwaysSelect_A549_ACE2input,
     Interesting_pathways_A549_ACE2input)
 ```
 
-![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+
+#### A549 cell line transfected with ACE2
+
+Then, for the A549 cell line transfected with ACE2
+
+``` r
+## We run GSA hyper Geometric test
+sig_pathways_A549ACE2_ACE2input <- runGSAhyper(NodesA549ACE2_ACE2input$sucesses, 
+    universe = NodesA549ACE2_ACE2input$bg, gsc = loadGSC(pathways))
+sig_pathways_df_A549ACE2_ACE2input <- 
+    as.data.frame(sig_pathways_A549ACE2_ACE2input$resTab)
+
+## We map the t-stastic into the resulted enriched pathways.
+sig_pathways_df_A549ACE2_ACE2input$sign <- 
+    unlist(lapply(row.names(sig_pathways_df_A549ACE2_ACE2input), 
+    function(x, kinases, pathways){
+        return(mean(dds_A549ACE2vsCOV2[row.names(dds_A549ACE2vsCOV2) %in% pathways[pathways$term == x,1],1], na.rm = TRUE))
+    },kinases = kinases, pathways = pathways))
+
+sig_pathways_df_A549ACE2_ACE2input <- 
+    sig_pathways_df_A549ACE2_ACE2input[!is.nan(sig_pathways_df_A549ACE2_ACE2input$sign),]
+```
+
+We format the results and we prepare them to be plotted. For
+visualization purposes, we just select pathways with adjusted p-values
+lower than 0.001.
+
+``` r
+PathwaysSelect_A549ACE2_ACE2input <- sig_pathways_df_A549ACE2_ACE2input %>%
+    tibble::rownames_to_column(var = "pathway") %>%
+    dplyr::select(pathway, `p-value`, `Adjusted p-value`, sign) %>%
+    dplyr::filter(`Adjusted p-value` <= 0.0001) %>%
+    dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>% 
+    dplyr::mutate(pathway = as.factor(pathway))
+```
+
+We finally plot the results highlighting the most relevant pathways.
+
+``` r
+Interesting_pathways_A549ACE2_ACE2input <- c("BIOCARTA_CXCR4_PATHWAY")
+
+p_A549ACE2_ACE2input <- BarplotEnrichment(PathwaysSelect_A549ACE2_ACE2input, 
+    Interesting_pathways_A549ACE2_ACE2input)
+```
+
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+
+#### CALU-3 cell line
+
+First for the CALU-3 cell line
+
+``` r
+## We run GSA hyper Geometric test
+sig_pathways_CALU3_ACE2input <- runGSAhyper(NodesCALU3_ACE2input$sucesses, 
+    universe = NodesCALU3_ACE2input$bg, gsc = loadGSC(pathways))
+sig_pathways_df_CALU3_ACE2input <- 
+    as.data.frame(sig_pathways_CALU3_ACE2input$resTab)
+
+## We map the t-stastic into the resulted enriched pathways.
+sig_pathways_df_CALU3_ACE2input$sign <- 
+    unlist(lapply(row.names(sig_pathways_df_CALU3_ACE2input), 
+    function(x, kinases, pathways){
+        return(mean(dds_CALU3vsCOV2[row.names(dds_CALU3vsCOV2) %in% pathways[pathways$term == x,1],1], na.rm = TRUE))
+    },kinases = kinases, pathways = pathways))
+
+sig_pathways_df_CALU3_ACE2input <- 
+    sig_pathways_df_CALU3_ACE2input[!is.nan(sig_pathways_df_CALU3_ACE2input$sign),]
+```
+
+We format the results and we prepare them to be plotted. For
+visualization purposes, we just select pathways with adjusted p-values
+lower than 0.0001.
+
+``` r
+PathwaysSelect_CALU3_ACE2input <- sig_pathways_df_CALU3_ACE2input %>%
+    tibble::rownames_to_column(var = "pathway") %>%
+    dplyr::select(pathway, `p-value`, `Adjusted p-value`, sign) %>%
+    dplyr::filter(`Adjusted p-value` <= 0.001) %>%
+    dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>% 
+    dplyr::mutate(pathway = as.factor(pathway))
+```
+
+We finally plot the results highlighting the most relevant pathways.
+
+``` r
+Interesting_pathways_CALU3_ACE2input <- c("PID_IFNG_PATHWAY")
+
+p_CALU3_ACE2input <- BarplotEnrichment(PathwaysSelect_CALU3_ACE2input, 
+    Interesting_pathways_CALU3_ACE2input)
+```
+
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 ### CARNIVAL output with host-virus interaction as Perturbation
+
+#### NHBE cell line
 
 First for the NHBE cell line
 
@@ -403,7 +637,9 @@ p_NHBE_HostVirusinput <- BarplotEnrichment(PathwaysSelect_NHBE_HostVirusinput,
     Interesting_pathways_NHBE_HostVirusinput)
 ```
 
-![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+
+#### A549 cell line
 
 Then, for the A549 cell line
 
@@ -448,7 +684,105 @@ p_A549_HostVirusinput <- BarplotEnrichment(PathwaysSelect_A549_HostVirusinput,
     Interesting_pathways_A549_HostVirusinput)
 ```
 
-![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+
+#### A549 cell line transfected with ACE2
+
+Then, for the A549 cell line transfected with ACE2
+
+``` r
+## We run GSA hyper Geometric test
+sig_pathways_A549ACE2_HostVirusinput <- 
+    runGSAhyper(NodesA549ACE2_HostVirusinput$sucesses, 
+    universe = NodesA549ACE2_HostVirusinput$bg, gsc = loadGSC(pathways))
+sig_pathways_df_A549ACE2_HostVirusinput <- 
+    as.data.frame(sig_pathways_A549ACE2_HostVirusinput$resTab)
+
+## We map the t-stastic into the resulted enriched pathways.
+sig_pathways_df_A549ACE2_HostVirusinput$sign <- 
+    unlist(lapply(row.names(sig_pathways_df_A549ACE2_HostVirusinput), 
+    function(x, kinases, pathways){
+        return(mean(dds_A549ACE2vsCOV2[row.names(dds_A549ACE2vsCOV2) %in% 
+            pathways[pathways$term == x,1],1], na.rm = TRUE))
+    },kinases = kinases, pathways = pathways))
+
+sig_pathways_df_A549ACE2_HostVirusinput <- 
+    sig_pathways_df_A549ACE2_HostVirusinput[!is.nan(sig_pathways_df_A549ACE2_HostVirusinput$sign),]
+```
+
+We format the results and we prepare them to be plotted. For
+visualization purposes, we just select pathways with adjusted p-values
+lower than 0.001.
+
+``` r
+PathwaysSelect_A549ACE2_HostVirusinput <- sig_pathways_df_A549ACE2_HostVirusinput %>%
+    tibble::rownames_to_column(var = "pathway") %>%
+    dplyr::select(pathway, `p-value`, `Adjusted p-value`, sign) %>%
+    dplyr::filter(`Adjusted p-value` <= 0.001) %>%
+    dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>% 
+    dplyr::mutate(pathway = as.factor(pathway))
+```
+
+We finally plot the results highlighting the most relevant pathways.
+
+``` r
+Interesting_pathways_A549ACE2_HostVirusinput <- c("BIOCARTA_CXCR4_PATHWAY",
+    "PID_IL2_1PATHWAY", "PID_IL23_PATHWAY")
+    
+p_A549ACE2_HostVirusinput <- BarplotEnrichment(PathwaysSelect_A549ACE2_HostVirusinput, 
+    Interesting_pathways_A549ACE2_HostVirusinput)
+```
+
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
+
+#### CALU-3 cell line
+
+Finally for the CALU-3 cell line
+
+``` r
+## We run GSA hyper Geometric test
+sig_pathways_CALU3_HostVirusinput <- 
+    runGSAhyper(NodesCALU3_HostVirusinput$sucesses, 
+    universe = NodesCALU3_HostVirusinput$bg, gsc = loadGSC(pathways))
+sig_pathways_df_CALU3_HostVirusinput <- 
+    as.data.frame(sig_pathways_CALU3_HostVirusinput$resTab)
+
+## We map the t-stastic into the resulted enriched pathways.
+sig_pathways_df_CALU3_HostVirusinput$sign <- 
+    unlist(lapply(row.names(sig_pathways_df_CALU3_HostVirusinput), 
+    function(x, kinases, pathways){
+        return(mean(dds_CALU3vsCOV2[row.names(dds_CALU3vsCOV2) %in% 
+            pathways[pathways$term == x,1],1], na.rm = TRUE))
+    },kinases = kinases, pathways = pathways))
+
+sig_pathways_df_CALU3_HostVirusinput <- 
+    sig_pathways_df_CALU3_HostVirusinput[!is.nan(sig_pathways_df_CALU3_HostVirusinput$sign),]
+```
+
+We format the results and we prepare them to be plotted. For
+visualization purposes, we just select pathways with adjusted p-values
+lower than 0.00001.
+
+``` r
+PathwaysSelect_CALU3_HostVirusinput <- sig_pathways_df_CALU3_HostVirusinput %>%
+    tibble::rownames_to_column(var = "pathway") %>%
+    dplyr::select(pathway, `p-value`, `Adjusted p-value`, sign) %>%
+    dplyr::filter(`Adjusted p-value` <= 0.05) %>%
+    dplyr::rename(pvalue = `p-value`, AdjPvalu = `Adjusted p-value`) %>% 
+    dplyr::mutate(pathway = as.factor(pathway))
+```
+
+We finally plot the results highlighting the most relevant pathways.
+
+``` r
+Interesting_pathways_CALU3_HostVirusinput <- 
+    c("SIF_IL4RECEPTOR_IN_B_LYPHOCYTES", "KEGG_TTGF_BETA_SIGNALING_PATHWAY")
+    
+p_CALU3_HostVirusinput <- BarplotEnrichment(PathwaysSelect_CALU3_HostVirusinput, 
+    Interesting_pathways_CALU3_HostVirusinput)
+```
+
+![](CarnivalEnrichment_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
 
 ## R session Info
 

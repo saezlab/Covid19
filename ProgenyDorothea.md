@@ -38,6 +38,14 @@ study:
   - A549 alveolar cancer cell line: mock treated vs infected with
     SARS-CoV-2.
 
+  - A549 cell line does not express ACE2, the receptor used by
+    SARS-CoV-2 to penetrate into human cells. Therefore A549 were also
+    transduced with ACE2 and then mock treated or infected with
+    SARS-CoV-2
+
+  - Calu-3 human lung epithelial cancer cell line: mock treated vs
+    infected with SARS-CoV-2.
+
 ## Getting Started
 
 We first load the required libraries.
@@ -61,12 +69,19 @@ from the previous script.
 ``` r
 ## Differential expression table
 dds_NHBEvsCOV2 <- readRDS("IntermediateFiles/dds_results_NHBEvsCOV2.rds")
-dds_A549vsCOV2 <- readRDS("IntermediateFiles/dds_results_A549vsCOV2.rds") 
+dds_A549vsCOV2 <- readRDS("IntermediateFiles/dds_results_A549vsCOV2.rds")
+dds_A549ACE2vsCOV2 <- 
+  readRDS("IntermediateFiles/dds_results_A549ACE2vsCOV2.rds") 
+dds_CALU3vsCOV2 <- readRDS("IntermediateFiles/dds_results_CALU3vsCOV2.rds")
 
 norm_counts_NHBEvsCOV2 <- 
     readRDS("IntermediateFiles/counts_norm_NHBEvsCOV2.rds")
 norm_counts_A549vsCOV2 <- 
     readRDS("IntermediateFiles/counts_norm_A549vsCOV2.rds")
+norm_counts_A549ACE2vsCOV2 <- 
+    readRDS("IntermediateFiles/counts_norm_A549ACE2vsCOV2.rds")
+norm_counts_CALU3vsCOV2 <- 
+    readRDS("IntermediateFiles/counts_norm_CALU3vsCOV2.rds")
 ```
 
 ## Pathway activity with Progeny
@@ -93,6 +108,9 @@ progenyBreaks <- c(seq(min(activities_NHBEvsCOV2), 0,
     seq(max(activities_NHBEvsCOV2)/paletteLength, 
     max(activities_NHBEvsCOV2), 
     length.out=floor(paletteLength/2)))
+```
+
+``` r
 progeny_hmap <- pheatmap(t(pathways_NHBEvsCOV2_counts),fontsize=14, 
     fontsize_row = 10, fontsize_col = 10, 
     color=myColor, breaks = progenyBreaks, 
@@ -100,7 +118,7 @@ progeny_hmap <- pheatmap(t(pathways_NHBEvsCOV2_counts),fontsize=14,
     treeheight_col = 0,  border_color = NA)
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 We can see that the different replicates cluster together and clear
 different activity patterns between the infected and the mock treated
@@ -134,7 +152,9 @@ pathways_NHBEvsCOV2_zscore_df <- as.data.frame(pathways_NHBEvsCOV2_zscore) %>%
     rownames_to_column(var = "Pathway") %>%
     dplyr::arrange(NES) %>%
     dplyr::mutate(Pathway = factor(Pathway))
+```
 
+``` r
 ggplot(pathways_NHBEvsCOV2_zscore_df,aes(x = reorder(Pathway, NES), y = NES)) + 
     geom_bar(aes(fill = NES), stat = "identity") +
     scale_fill_gradient2(low = "darkblue", high = "indianred", 
@@ -149,7 +169,7 @@ ggplot(pathways_NHBEvsCOV2_zscore_df,aes(x = reorder(Pathway, NES), y = NES)) +
     xlab("Pathways")
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ### A549 mock treated vs infected with SARS-CoV-2
 
@@ -173,6 +193,9 @@ progenyBreaks <- c(seq(min(activities_A549vsCOV2), 0,
     seq(max(activities_A549vsCOV2)/paletteLength, 
     max(activities_A549vsCOV2), 
     length.out=floor(paletteLength/2)))
+```
+
+``` r
 progeny_hmap <- pheatmap(t(pathways_A549vsCOV2_counts),fontsize=14, 
     fontsize_row = 10, fontsize_col = 10, 
     color=myColor, breaks = progenyBreaks, 
@@ -180,7 +203,7 @@ progeny_hmap <- pheatmap(t(pathways_A549vsCOV2_counts),fontsize=14,
     treeheight_col = 0,  border_color = NA)
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 We can see that the different replicates cluster together and clear
 different activity patterns between the infected and the mock treated
@@ -214,7 +237,9 @@ pathways_A549vsCOV2_zscore_df <- as.data.frame(pathways_A549vsCOV2_zscore) %>%
     rownames_to_column(var = "Pathway") %>%
     dplyr::arrange(NES) %>%
     dplyr::mutate(Pathway = factor(Pathway))
+```
 
+``` r
 ggplot(pathways_A549vsCOV2_zscore_df,aes(x = reorder(Pathway, NES), y = NES)) + 
     geom_bar(aes(fill = NES), stat = "identity") +
     scale_fill_gradient2(low = "darkblue", high = "indianred", 
@@ -229,7 +254,176 @@ ggplot(pathways_A549vsCOV2_zscore_df,aes(x = reorder(Pathway, NES), y = NES)) +
     xlab("Pathways")
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+### A549 transduced with ACE2 mock treated vs infected with SARS-CoV-2
+
+We reproduce the progeny activity analysis for A549 transduced with ACE2
+cell line.
+
+We first compute **Progeny** scores per every sample (with the
+replicates) using the normalised counts. We display the results in a
+Heatmap.
+
+``` r
+pathways_A549ACE2vsCOV2_counts <- progeny(norm_counts_A549ACE2vsCOV2, 
+    scale=TRUE, organism="Human", top = 100)
+activities_A549ACE2vsCOV2 <- as.vector(pathways_A549ACE2vsCOV2_counts)
+
+paletteLength <- 100
+myColor <- 
+    colorRampPalette(c("darkblue", "whitesmoke","indianred"))(paletteLength)
+
+progenyBreaks <- c(seq(min(activities_A549ACE2vsCOV2), 0, 
+    length.out=ceiling(paletteLength/2) + 1),
+    seq(max(activities_A549ACE2vsCOV2)/paletteLength, 
+    max(activities_A549ACE2vsCOV2), 
+    length.out=floor(paletteLength/2)))
+```
+
+``` r
+progeny_hmap <- pheatmap(t(pathways_A549ACE2vsCOV2_counts),fontsize=14, 
+    fontsize_row = 10, fontsize_col = 10, 
+    color=myColor, breaks = progenyBreaks, 
+    main = "PROGENy (100)", angle_col = 45,
+    treeheight_col = 0,  border_color = NA)
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+We can see that the different replicates cluster together and clear
+different activity patterns between the infected and the mock treated
+A549 lines (transduced with ACE2). To evaluate the significance and sign
+of these pathway activities, we can run again **Progeny** using the
+statistic from the differential express analysis.
+
+``` r
+dds_A549ACE2vsCOV2_df <- as.data.frame(dds_A549ACE2vsCOV2) %>% 
+    rownames_to_column(var = "GeneID") %>% 
+    dplyr::select(GeneID, stat) %>% 
+    dplyr::filter(!is.na(stat)) %>% 
+    column_to_rownames(var = "GeneID") 
+
+pathways_A549ACE2vsCOV2_zscore <- t(progeny(as.matrix(dds_A549ACE2vsCOV2_df), 
+    scale=TRUE, organism="Human", top = 100, perm = 10000, z_scores = TRUE))
+colnames(pathways_A549ACE2vsCOV2_zscore) <- "NES"
+
+## I also need to run progeny in such a way to have values between 1 and -1 to
+## use as CARNIVAL input
+pathways_A549ACE2vsCOV2_zscore_inputCarnival <- 
+  t(progeny(as.matrix(dds_A549ACE2vsCOV2_df), 
+    scale=TRUE, organism="Human", top = 100, perm = 10000, z_scores = FALSE))
+colnames(pathways_A549ACE2vsCOV2_zscore_inputCarnival) <- "Activity"
+```
+
+We now display the normalized enrichment scores (NES) in a bar plot.
+
+``` r
+pathways_A549ACE2vsCOV2_zscore_df <- as.data.frame(pathways_A549ACE2vsCOV2_zscore) %>% 
+    rownames_to_column(var = "Pathway") %>%
+    dplyr::arrange(NES) %>%
+    dplyr::mutate(Pathway = factor(Pathway))
+```
+
+``` r
+ggplot(pathways_A549ACE2vsCOV2_zscore_df,aes(x = reorder(Pathway, NES), y = NES)) + 
+    geom_bar(aes(fill = NES), stat = "identity") +
+    scale_fill_gradient2(low = "darkblue", high = "indianred", 
+        mid = "whitesmoke", midpoint = 0) + 
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold", size = 12),
+        axis.text.x = 
+            element_text(angle = 45, hjust = 1, size =10, face= "bold"),
+        axis.text.y = element_text(size =10, face= "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+    xlab("Pathways")
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+### CALU-3 mock treated vs infected with SARS-CoV-2
+
+We first compute **Progeny** scores per every sample (with the
+replicates) using the normalised counts. We display the results in a
+Heatmap.
+
+``` r
+pathways_CALU3vsCOV2_counts <- progeny(norm_counts_CALU3vsCOV2, scale=TRUE, 
+    organism="Human", top = 100)
+activities_CALU3vsCOV2 <- as.vector(pathways_CALU3vsCOV2_counts)
+
+paletteLength <- 100
+myColor <- 
+    colorRampPalette(c("darkblue", "whitesmoke","indianred"))(paletteLength)
+
+progenyBreaks <- c(seq(min(activities_CALU3vsCOV2), 0, 
+    length.out=ceiling(paletteLength/2) + 1),
+    seq(max(activities_CALU3vsCOV2)/paletteLength, 
+    max(activities_CALU3vsCOV2), 
+    length.out=floor(paletteLength/2)))
+```
+
+``` r
+progeny_hmap <- pheatmap(t(pathways_CALU3vsCOV2_counts),fontsize=14, 
+    fontsize_row = 10, fontsize_col = 10, 
+    color=myColor, breaks = progenyBreaks, 
+    main = "PROGENy (100)", angle_col = 45,
+    treeheight_col = 0,  border_color = NA)
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+We can see that the different replicates cluster together and clear
+different activity patterns between the infected and the mock treated
+CALU-3 lines. To evaluate the significance and sign of these pathway
+activities, we can run again **Progeny** using the statistic from the
+differential express analysis.
+
+``` r
+dds_CALU3vsCOV2_df <- as.data.frame(dds_CALU3vsCOV2) %>% 
+    rownames_to_column(var = "GeneID") %>% 
+    dplyr::select(GeneID, stat) %>% 
+    dplyr::filter(!is.na(stat)) %>% 
+    column_to_rownames(var = "GeneID") 
+
+pathways_CALU3vsCOV2_zscore <- t(progeny(as.matrix(dds_CALU3vsCOV2_df), 
+    scale=TRUE, organism="Human", top = 100, perm = 10000, z_scores = TRUE))
+colnames(pathways_CALU3vsCOV2_zscore) <- "NES"
+
+## I also need to run progeny in such a way to have values between 1 and -1 to
+## use as CARNIVAL input
+pathways_CALU3vsCOV2_zscore_inputCarnival <- 
+  t(progeny(as.matrix(dds_CALU3vsCOV2_df), 
+    scale=TRUE, organism="Human", top = 100, perm = 10000, z_scores = FALSE))
+colnames(pathways_CALU3vsCOV2_zscore_inputCarnival) <- "Activity"
+```
+
+We now display the normalized enrichment scores (NES) in a bar plot.
+
+``` r
+pathways_CALU3vsCOV2_zscore_df <- as.data.frame(pathways_CALU3vsCOV2_zscore) %>% 
+    rownames_to_column(var = "Pathway") %>%
+    dplyr::arrange(NES) %>%
+    dplyr::mutate(Pathway = factor(Pathway))
+```
+
+``` r
+ggplot(pathways_CALU3vsCOV2_zscore_df,aes(x = reorder(Pathway, NES), y = NES)) + 
+    geom_bar(aes(fill = NES), stat = "identity") +
+    scale_fill_gradient2(low = "darkblue", high = "indianred", 
+        mid = "whitesmoke", midpoint = 0) + 
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold", size = 12),
+        axis.text.x = 
+            element_text(angle = 45, hjust = 1, size =10, face= "bold"),
+        axis.text.y = element_text(size =10, face= "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+    xlab("Pathways")
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ## Transcription Factor activity with Dorothea and Viper
 
@@ -281,7 +475,9 @@ tf_activities_NHBEvsCOV2_top25 <- tf_activities_NHBEvsCOV2_stat %>%
     dplyr::top_n(25, wt = abs(NES)) %>%
     dplyr::arrange(NES) %>% 
     dplyr::mutate(GeneID = factor(GeneID))
-    
+```
+
+``` r
 ggplot(tf_activities_NHBEvsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)) + 
     geom_bar(aes(fill = NES), stat = "identity") +
     scale_fill_gradient2(low = "darkblue", high = "indianred", 
@@ -296,7 +492,7 @@ ggplot(tf_activities_NHBEvsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)) +
     xlab("Transcription Factors")
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
 We now compute TFs activities per every sample (with the replicates)
 using the normalised counts. We display the results of the previous 25
@@ -326,14 +522,17 @@ dorotheaBreaks <- c(seq(min(tf_activities_NHBEvsCOV2), 0,
     seq(max(tf_activities_NHBEvsCOV2)/paletteLength, 
     max(tf_activities_NHBEvsCOV2), 
     length.out=floor(paletteLength/2)))
+```
+
+``` r
 dorothea_hmap <- pheatmap(tf_activities_NHBEvsCOV2_counts_filter,
     fontsize=14, fontsize_row = 8, fontsize_col = 8, 
-    color=myColor, breaks = dorotheaBreaks,,
+    color=myColor, breaks = dorotheaBreaks,
     main = "Dorothea ABC", angle_col = 45,
     treeheight_col = 0,  border_color = NA)
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ### A549 mock treated vs infected with SARS-CoV-2
 
@@ -365,7 +564,9 @@ tf_activities_A549vsCOV2_top25 <- tf_activities_A549vsCOV2_stat %>%
     dplyr::top_n(25, wt = abs(NES)) %>%
     dplyr::arrange(NES) %>% 
     dplyr::mutate(GeneID = factor(GeneID))
-    
+```
+
+``` r
 ggplot(tf_activities_A549vsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)) + 
     geom_bar(aes(fill = NES), stat = "identity") +
     scale_fill_gradient2(low = "darkblue", high = "indianred", 
@@ -380,7 +581,7 @@ ggplot(tf_activities_A549vsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)) +
     xlab("Transcription Factors")
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 We now compute TFs activities per every sample (with the replicates)
 using the normalised counts. We display the results of the previous 25
@@ -410,6 +611,9 @@ dorotheaBreaks <- c(seq(min(tf_activities_A549vsCOV2), 0,
     seq(max(tf_activities_A549vsCOV2)/paletteLength, 
     max(tf_activities_A549vsCOV2), 
     length.out=floor(paletteLength/2)))
+```
+
+``` r
 dorothea_hmap <- pheatmap(tf_activities_A549vsCOV2_counts_filter,
     fontsize=14, fontsize_row = 8, fontsize_col = 8, 
     color=myColor, breaks = dorotheaBreaks,
@@ -417,7 +621,185 @@ dorothea_hmap <- pheatmap(tf_activities_A549vsCOV2_counts_filter,
     treeheight_col = 0,  border_color = NA)
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+
+### A549 transduced with ACE2 mock treated vs infected with SARS-CoV-2
+
+We first run Viper using the statistic from the different expression
+analysis.
+
+``` r
+dds_A549ACE2vsCOV2_stat <-  as.data.frame(dds_A549ACE2vsCOV2) %>% 
+    rownames_to_column(var = "GeneID") %>% 
+    dplyr::select(GeneID, stat) %>% 
+    dplyr::filter(!is.na(stat)) %>% 
+    column_to_rownames(var = "GeneID") %>%
+    as.matrix()
+
+tf_activities_A549ACE2vsCOV2_stat <- 
+    dorothea::run_viper(as.matrix(dds_A549ACE2vsCOV2_stat), regulons,
+    options =  list(minsize = 5, eset.filter = FALSE, 
+    cores = 1, verbose = FALSE, nes = TRUE))
+```
+
+We now display the top 25 normalized enrichment scores (NES) for the TF
+in a bar plot.
+
+``` r
+tf_activities_A549ACE2vsCOV2_top25 <- tf_activities_A549ACE2vsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(25, wt = abs(NES)) %>%
+    dplyr::arrange(NES) %>% 
+    dplyr::mutate(GeneID = factor(GeneID))
+```
+
+``` r
+ggplot(tf_activities_A549ACE2vsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)) + 
+    geom_bar(aes(fill = NES), stat = "identity") +
+    scale_fill_gradient2(low = "darkblue", high = "indianred", 
+        mid = "whitesmoke", midpoint = 0) + 
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold", size = 12),
+        axis.text.x = 
+            element_text(angle = 45, hjust = 1, size =10, face= "bold"),
+        axis.text.y = element_text(size =10, face= "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+    xlab("Transcription Factors")
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+
+We now compute TFs activities per every sample (with the replicates)
+using the normalised counts. We display the results of the previous 25
+TFs in a Heatmap.
+
+``` r
+tf_activities_A549ACE2vsCOV2_counts <- 
+    dorothea::run_viper(norm_counts_A549ACE2vsCOV2, regulons,
+    options =  list(minsize = 5, eset.filter = FALSE, 
+    cores = 1, verbose = FALSE, method = c("scale")))
+
+tf_activities_A549ACE2vsCOV2_counts_filter <- tf_activities_A549ACE2vsCOV2_counts %>% 
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::filter(GeneID %in% tf_activities_A549ACE2vsCOV2_top25$GeneID) %>%
+    column_to_rownames(var = "GeneID") %>%
+    as.matrix()
+
+tf_activities_A549ACE2vsCOV2 <- as.vector(tf_activities_A549ACE2vsCOV2_counts_filter)
+
+paletteLength <- 100
+myColor <- 
+    colorRampPalette(c("darkblue", "whitesmoke","indianred"))(paletteLength)
+
+dorotheaBreaks <- c(seq(min(tf_activities_A549ACE2vsCOV2), 0, 
+    length.out=ceiling(paletteLength/2) + 1),
+    seq(max(tf_activities_A549ACE2vsCOV2)/paletteLength, 
+    max(tf_activities_A549ACE2vsCOV2), 
+    length.out=floor(paletteLength/2)))
+```
+
+``` r
+dorothea_hmap <- pheatmap(tf_activities_A549ACE2vsCOV2_counts_filter,
+    fontsize=14, fontsize_row = 8, fontsize_col = 8, 
+    color=myColor, breaks = dorotheaBreaks,
+    main = "Dorothea ABC", angle_col = 45,
+    treeheight_col = 0,  border_color = NA)
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+
+### CALU-3 mock treated vs infected with SARS-CoV-2
+
+We first run Viper using the statistic from the different expression
+analysis.
+
+``` r
+dds_CALU3vsCOV2_stat <-  as.data.frame(dds_CALU3vsCOV2) %>% 
+    rownames_to_column(var = "GeneID") %>% 
+    dplyr::select(GeneID, stat) %>% 
+    dplyr::filter(!is.na(stat)) %>% 
+    column_to_rownames(var = "GeneID") %>%
+    as.matrix()
+
+tf_activities_CALU3vsCOV2_stat <- 
+    dorothea::run_viper(as.matrix(dds_CALU3vsCOV2_stat), regulons,
+    options =  list(minsize = 5, eset.filter = FALSE, 
+    cores = 1, verbose = FALSE, nes = TRUE))
+```
+
+We now display the top 25 normalized enrichment scores (NES) for the TF
+in a bar plot.
+
+``` r
+tf_activities_CALU3vsCOV2_top25 <- tf_activities_CALU3vsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(25, wt = abs(NES)) %>%
+    dplyr::arrange(NES) %>% 
+    dplyr::mutate(GeneID = factor(GeneID))
+```
+
+``` r
+ggplot(tf_activities_CALU3vsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)) + 
+    geom_bar(aes(fill = NES), stat = "identity") +
+    scale_fill_gradient2(low = "darkblue", high = "indianred", 
+        mid = "whitesmoke", midpoint = 0) + 
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold", size = 12),
+        axis.text.x = 
+            element_text(angle = 45, hjust = 1, size =10, face= "bold"),
+        axis.text.y = element_text(size =10, face= "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+    xlab("Transcription Factors")
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+
+We now compute TFs activities per every sample (with the replicates)
+using the normalised counts. We display the results of the previous 25
+TFs in a Heatmap.
+
+``` r
+tf_activities_CALU3vsCOV2_counts <- 
+    dorothea::run_viper(norm_counts_CALU3vsCOV2, regulons,
+    options =  list(minsize = 5, eset.filter = FALSE, 
+    cores = 1, verbose = FALSE, method = c("scale")))
+
+tf_activities_CALU3vsCOV2_counts_filter <- tf_activities_CALU3vsCOV2_counts %>% 
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::filter(GeneID %in% tf_activities_CALU3vsCOV2_top25$GeneID) %>%
+    column_to_rownames(var = "GeneID") %>%
+    as.matrix()
+
+tf_activities_CALU3vsCOV2 <- as.vector(tf_activities_CALU3vsCOV2_counts_filter)
+
+paletteLength <- 100
+myColor <- 
+    colorRampPalette(c("darkblue", "whitesmoke","indianred"))(paletteLength)
+
+dorotheaBreaks <- c(seq(min(tf_activities_CALU3vsCOV2), 0, 
+    length.out=ceiling(paletteLength/2) + 1),
+    seq(max(tf_activities_CALU3vsCOV2)/paletteLength, 
+    max(tf_activities_CALU3vsCOV2), 
+    length.out=floor(paletteLength/2)))
+```
+
+``` r
+dorothea_hmap <- pheatmap(tf_activities_CALU3vsCOV2_counts_filter,
+    fontsize=14, fontsize_row = 8, fontsize_col = 8, 
+    color=myColor, breaks = dorotheaBreaks,
+    main = "Dorothea ABC", angle_col = 45,
+    treeheight_col = 0,  border_color = NA)
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
 
 ### Saving Results
 
@@ -443,6 +825,28 @@ saveRDS(tf_activities_A549vsCOV2_stat,
     file = "IntermediateFiles/tf_activities_A549vsCOV2_stat.rds")
 saveRDS(tf_activities_A549vsCOV2_counts, 
     file = "IntermediateFiles/tf_activities_A549vsCOV2_counts.rds")
+
+saveRDS(pathways_A549ACE2vsCOV2_counts, 
+    file = "IntermediateFiles/pathways_A549ACE2vsCOV2_counts.rds")
+saveRDS(pathways_A549ACE2vsCOV2_zscore,
+    file = "IntermediateFiles/pathways_A549ACE2vsCOV2_zscore.rds")
+saveRDS(pathways_A549ACE2vsCOV2_zscore_inputCarnival,
+    file = "IntermediateFiles/pathways_A549ACE2vsCOV2_zscore_inputCarnival.rds")
+saveRDS(tf_activities_A549ACE2vsCOV2_stat, 
+    file = "IntermediateFiles/tf_activities_A549ACE2vsCOV2_stat.rds")
+saveRDS(tf_activities_A549ACE2vsCOV2_counts, 
+    file = "IntermediateFiles/tf_activities_A549ACE2vsCOV2_counts.rds")
+
+saveRDS(pathways_CALU3vsCOV2_counts, 
+    file = "IntermediateFiles/pathways_CALU3vsCOV2_counts.rds")
+saveRDS(pathways_CALU3vsCOV2_zscore, 
+    file = "IntermediateFiles/pathways_CALU3vsCOV2_zscore.rds")
+saveRDS(pathways_CALU3vsCOV2_zscore_inputCarnival,
+    file = "IntermediateFiles/pathways_CALU3vsCOV2_zscore_inputCarnival.rds")
+saveRDS(tf_activities_CALU3vsCOV2_stat, 
+    file = "IntermediateFiles/tf_activities_CALU3vsCOV2_stat.rds")
+saveRDS(tf_activities_CALU3vsCOV2_counts,
+    file = "IntermediateFiles/tf_activities_CALU3vsCOV2_counts.rds")
 ```
 
 ## Session Info Details

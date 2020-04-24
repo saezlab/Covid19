@@ -40,6 +40,14 @@ launched using different assumptions for the two condiitons under study:
   - A549 alveolar cancer cell line: mock treated vs infected with
     SARS-CoV-2.
 
+  - A549 cell line does not express ACE2, the receptor used by
+    SARS-CoV-2 to penetrate into human cells. Therefore A549 were also
+    transduced with ACE2 and then mock treated or infected with
+    SARS-CoV-2
+
+  - Calu-3 human lung epithelial cancer cell line: mock treated vs
+    infected with SARS-CoV-2.
+
 ## Getting Started
 
 We first load the required libraries.
@@ -92,6 +100,16 @@ pathways_A549vsCOV2_zscore_inputCarnival <- readRDS(file =
     "IntermediateFiles/pathways_A549vsCOV2_zscore_inputCarnival.rds")
 tf_activities_A549vsCOV2_stat <- 
     readRDS(file = "IntermediateFiles/tf_activities_A549vsCOV2_stat.rds")
+
+pathways_A549ACE2vsCOV2_zscore_inputCarnival <- readRDS(file = 
+    "IntermediateFiles/pathways_A549ACE2vsCOV2_zscore_inputCarnival.rds")
+tf_activities_A549ACE2vsCOV2_stat <- 
+    readRDS(file = "IntermediateFiles/tf_activities_A549ACE2vsCOV2_stat.rds")
+
+pathways_CALU3vsCOV2_zscore_inputCarnival <- readRDS(file = 
+    "IntermediateFiles/pathways_CALU3vsCOV2_zscore_inputCarnival.rds")
+tf_activities_CALU3vsCOV2_stat <- 
+    readRDS(file = "IntermediateFiles/tf_activities_CALU3vsCOV2_stat.rds")
 ```
 
 ## Prior Knowledge Network from Omnipath
@@ -164,6 +182,7 @@ select the top 50 most active/inactive TFs present in our prior
 knowledge network.
 
 ``` r
+### NHBE
 tf_activities_NHBEvsCOV2_stat_top50 <- tf_activities_NHBEvsCOV2_stat %>% 
   as.data.frame() %>% 
   rownames_to_column(var = "GeneID") %>%
@@ -175,6 +194,7 @@ tf_activities_NHBEvsCOV2_stat_top50 <- tf_activities_NHBEvsCOV2_stat %>%
 saveRDS(colnames(tf_activities_NHBEvsCOV2_stat_top50), 
   file = "IntermediateFiles/Top50_tf_activities_NHBEvsCOV2.rds")
 
+### A549
 tf_activities_A549vsCOV2_stat_top50 <- tf_activities_A549vsCOV2_stat %>% 
   as.data.frame() %>% 
   rownames_to_column(var = "GeneID") %>%
@@ -185,9 +205,35 @@ tf_activities_A549vsCOV2_stat_top50 <- tf_activities_A549vsCOV2_stat %>%
   t()
 saveRDS(colnames(tf_activities_A549vsCOV2_stat_top50), 
   file = "IntermediateFiles/Top50_tf_activities_A549vsCOV2.rds")
+
+### A549 transfected with ACE2
+tf_activities_A549ACE2vsCOV2_stat_top50 <- tf_activities_A549ACE2vsCOV2_stat %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "GeneID") %>%
+  dplyr::filter(GeneID %in% AllNodesNetwork) %>%
+  dplyr::arrange(desc(abs(stat))) %>%
+  dplyr::top_n(50, wt = abs(stat)) %>%
+  column_to_rownames(var = "GeneID") %>%
+  t()
+saveRDS(colnames(tf_activities_A549ACE2vsCOV2_stat_top50), 
+  file = "IntermediateFiles/Top50_tf_activities_A549ACE2vsCOV2.rds")
+
+### CALU-3
+tf_activities_CALU3vsCOV2_stat_top50 <- tf_activities_CALU3vsCOV2_stat %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "GeneID") %>%
+  dplyr::filter(GeneID %in% AllNodesNetwork) %>%
+  dplyr::arrange(desc(abs(stat))) %>%
+  dplyr::top_n(50, wt = abs(stat)) %>%
+  column_to_rownames(var = "GeneID") %>%
+  t()
+saveRDS(colnames(tf_activities_CALU3vsCOV2_stat_top50), 
+  file = "IntermediateFiles/Top50_tf_activities_CALU3vsCOV2.rds")
 ```
 
 ### CARNIVAL without perturbations file
+
+#### NHBE cell line
 
 First for the NHBE line:
 
@@ -212,6 +258,8 @@ This is the network after importing CARNIVAL results into cytoscape:
 
 <br><br> ![](ResultsCARNIVAL/NHBE_noinputNetwork.sif.png) <br><br>
 
+#### A549 cell line
+
 Then for the A549 line:
 
 ``` r
@@ -232,6 +280,54 @@ OutputCyto(CarnivalResults_A549vsCOV2,
 ```
 
 <br><br> ![](ResultsCARNIVAL/A549_noinputNetwork.sif.png) <br><br>
+
+#### A549 cell line transduced with ACE2
+
+Then for the A549 line transduced with ACE2:
+
+``` r
+CarnivalResults_A549ACE2vsCOV2 <-runCARNIVAL(
+    solverPath="/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplex",
+    netObj=NetworkCarnival_df,
+    measObj=as.data.frame(tf_activities_A549ACE2vsCOV2_stat_top50),
+    # inputObj = inputObj,
+    # DOTfig=TRUE, 
+    dir_name="ResultsCARNIVAL",
+    weightObj=t(pathways_A549ACE2vsCOV2_zscore_inputCarnival),
+    # nodeID = 'gene',
+    timelimit = 1200,
+    solver = "cplex")
+saveRDS(CarnivalResults_A549ACE2vsCOV2, file = "ResultsCARNIVAL/A549ACE2_noinput.rds")
+OutputCyto(CarnivalResults_A549ACE2vsCOV2, 
+  outputFile="ResultsCARNIVAL/A549ACE2_noinput")
+```
+
+<br><br> ![](ResultsCARNIVAL/A549ACE2_noinputNetwork.sif.png) <br><br>
+
+#### CALU-3 cell line
+
+Now for the CALU-3 line:
+
+``` r
+CarnivalResults_CALU3vsCOV2 <-runCARNIVAL(
+    solverPath="/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplex",
+    netObj=NetworkCarnival_df,
+    measObj=as.data.frame(tf_activities_CALU3vsCOV2_stat_top50),
+    # inputObj = inputObj,
+    # DOTfig=TRUE, 
+    dir_name="ResultsCARNIVAL",
+    weightObj=t(pathways_CALU3vsCOV2_zscore_inputCarnival),
+    # nodeID = 'gene',
+    timelimit = 1200,
+    solver = "cplex")
+saveRDS(CarnivalResults_CALU3vsCOV2, file = "ResultsCARNIVAL/CALU3_noinput.rds")
+OutputCyto(CarnivalResults_CALU3vsCOV2, 
+  outputFile="ResultsCARNIVAL/CALU3_noinput")
+```
+
+This is the network after importing CARNIVAL results into cytoscape:
+
+<br><br> ![](ResultsCARNIVAL/CALU3_noinputNetwork.sif.png) <br><br>
 
 ### CARNIVAL with ACE2 perturbation
 
@@ -269,6 +365,8 @@ NetworkCarnivalACE2_df <-
 ACE2_perturbation <- data.frame(ACE2 = -1)
 ```
 
+#### NHBE cell line
+
 We now run **CARNIVAL** for the NHBE line:
 
 ``` r
@@ -291,7 +389,9 @@ OutputCyto(CarnivalResults_NHBEvsCOV2_ACE2,
 
 <br><br> ![](ResultsCARNIVAL/NHBE_ACE2inputNetwork.sif.png) <br><br>
 
-and now for the A459 line:
+#### A549 cell line
+
+And now for the A549 line:
 
 ``` r
 CarnivalResults_A549vsCOV2_ACE2 <-runCARNIVAL(
@@ -312,6 +412,54 @@ OutputCyto(CarnivalResults_A549vsCOV2_ACE2,
 ```
 
 <br><br> ![](ResultsCARNIVAL/A549_ACE2inputNetwork.sif.png) <br><br>
+
+#### A549 cell line transduced with ACE2
+
+And now for the A549 line transduced with ACE2:
+
+``` r
+CarnivalResults_A549ACE2vsCOV2_ACE2 <-runCARNIVAL(
+    solverPath="/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplex",
+    netObj=NetworkCarnivalACE2_df,
+    measObj=as.data.frame(tf_activities_A549ACE2vsCOV2_stat_top50),
+    inputObj = ACE2_perturbation,
+    # DOTfig=TRUE, 
+    dir_name="ResultsCARNIVAL",
+    weightObj=t(pathways_A549ACE2vsCOV2_zscore_inputCarnival),
+    # nodeID = 'gene',
+    timelimit = 1200,
+    solver = "cplex")
+saveRDS(CarnivalResults_A549ACE2vsCOV2_ACE2, 
+  file = "ResultsCARNIVAL/A549ACE2_ACE2input.rds")
+OutputCyto(CarnivalResults_A549ACE2vsCOV2_ACE2, 
+  outputFile="ResultsCARNIVAL/A549ACE2_ACE2input")
+```
+
+<br><br> ![](ResultsCARNIVAL/A549ACE2_ACE2inputNetwork.sif.png) <br><br>
+
+#### CALU-3 cell line
+
+We now run **CARNIVAL** for the CALU-3 line:
+
+``` r
+CarnivalResults_CALU3vsCOV2_ACE2 <-runCARNIVAL(
+    solverPath="/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplex",
+    netObj=NetworkCarnivalACE2_df,
+    measObj=as.data.frame(tf_activities_CALU3vsCOV2_stat_top50),
+    inputObj = ACE2_perturbation,
+    # DOTfig=TRUE, 
+    dir_name="ResultsCARNIVAL",
+    weightObj=t(pathways_CALU3vsCOV2_zscore_inputCarnival),
+    # nodeID = 'gene',
+    timelimit = 1200,
+    solver = "cplex")
+saveRDS(CarnivalResults_CALU3vsCOV2_ACE2, 
+  file = "ResultsCARNIVAL/CALU3_ACE2input.rds")
+OutputCyto(CarnivalResults_CALU3vsCOV2_ACE2, 
+  outputFile="ResultsCARNIVAL/CALU3_ACE2input")
+```
+
+<br><br> ![](ResultsCARNIVAL/CALU3_ACE2inputNetwork.sif.png) <br><br>
 
 ### CARNIVAL with host-virus interaction as Perturbation
 
@@ -366,6 +514,8 @@ HostVirus_perturbation <-
 rownames(HostVirus_perturbation) <- Virusproteins
 ```
 
+#### NHBE cell line
+
 We now run **CARNIVAL** for the NHBE line:
 
 ``` r
@@ -389,7 +539,9 @@ OutputCyto(CarnivalResults_NHBEvsCOV2_HostVirus,
 <br><br> ![](ResultsCARNIVAL/NHBE_HostVirusinputNetwork.sif.png)
 <br><br>
 
-and now for the A459 line:
+#### A549 cell line
+
+And now for the A549 line:
 
 ``` r
 CarnivalResults_A549vsCOV2_HostVirus <-runCARNIVAL(
@@ -410,6 +562,56 @@ OutputCyto(CarnivalResults_A549vsCOV2_HostVirus,
 ```
 
 <br><br> ![](ResultsCARNIVAL/A549_HostVirusinputNetwork.sif.png)
+<br><br>
+
+#### A549 cell line transfected with ACE2
+
+And now for the A549 line transfected with ACE2:
+
+``` r
+CarnivalResults_A549ACE2vsCOV2_HostVirus <-runCARNIVAL(
+    solverPath="/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplex",
+    netObj=NetworkCarnivalHostVirus_df,
+    measObj=as.data.frame(tf_activities_A549ACE2vsCOV2_stat_top50),
+    inputObj = as.data.frame(t(as.matrix(HostVirus_perturbation))),
+    # DOTfig=TRUE, 
+    dir_name="ResultsCARNIVAL",
+    weightObj=t(pathways_A549ACE2vsCOV2_zscore_inputCarnival),
+    # nodeID = 'gene',
+    timelimit = 1200,
+    solver = "cplex")
+saveRDS(CarnivalResults_A549ACE2vsCOV2_HostVirus, 
+  file = "ResultsCARNIVAL/A549ACE2_HostVirusinput.rds")
+OutputCyto(CarnivalResults_A549ACE2vsCOV2_HostVirus, 
+  outputFile="ResultsCARNIVAL/A549ACE2_HostVirusinput")
+```
+
+<br><br> ![](ResultsCARNIVAL/A549ACE2_HostVirusinputNetwork.sif.png)
+<br><br>
+
+#### CALU-3 cell line
+
+We now run **CARNIVAL** for the CALU-3 line:
+
+``` r
+CarnivalResults_CALU3vsCOV2_HostVirus <-runCARNIVAL(
+    solverPath="/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplex",
+    netObj=NetworkCarnivalHostVirus_df,
+    measObj=as.data.frame(tf_activities_CALU3vsCOV2_stat_top50),
+    inputObj = as.data.frame(t(as.matrix(HostVirus_perturbation))),
+    # DOTfig=TRUE, 
+    dir_name="ResultsCARNIVAL",
+    weightObj=t(pathways_CALU3vsCOV2_zscore_inputCarnival),
+    # nodeID = 'gene',
+    timelimit = 1200,
+    solver = "cplex")
+saveRDS(CarnivalResults_CALU3vsCOV2_HostVirus, 
+  file = "ResultsCARNIVAL/CALU3_HostVirusinput.rds")
+OutputCyto(CarnivalResults_CALU3vsCOV2_HostVirus, 
+  outputFile="ResultsCARNIVAL/CALU3_HostVirusinput")
+```
+
+<br><br> ![](ResultsCARNIVAL/CALU3_HostVirusinputNetwork.sif.png)
 <br><br>
 
 ## Session Info Details
