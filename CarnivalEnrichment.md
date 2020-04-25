@@ -329,7 +329,7 @@ sig_pathways_df_A549ACE2_noinput <-
 
 We format the results and we prepare them to be plotted. For
 visualization purposes, we just select pathways with adjusted p-values
-lower than 0.001.
+lower than 0.05.
 
 ``` r
 PathwaysSelect_A549ACE2_noinput <- sig_pathways_df_A549ACE2_noinput %>%
@@ -519,7 +519,7 @@ sig_pathways_df_A549ACE2_ACE2input <-
 
 We format the results and we prepare them to be plotted. For
 visualization purposes, we just select pathways with adjusted p-values
-lower than 0.001.
+lower than 0.0001.
 
 ``` r
 PathwaysSelect_A549ACE2_ACE2input <- sig_pathways_df_A549ACE2_ACE2input %>%
@@ -761,7 +761,7 @@ sig_pathways_df_CALU3_HostVirusinput <-
 
 We format the results and we prepare them to be plotted. For
 visualization purposes, we just select pathways with adjusted p-values
-lower than 0.00001.
+lower than 0.05.
 
 ``` r
 PathwaysSelect_CALU3_HostVirusinput <- sig_pathways_df_CALU3_HostVirusinput %>%
@@ -776,7 +776,7 @@ We finally plot the results highlighting the most relevant pathways.
 
 ``` r
 Interesting_pathways_CALU3_HostVirusinput <- 
-    c("SIF_IL4RECEPTOR_IN_B_LYPHOCYTES", "KEGG_TTGF_BETA_SIGNALING_PATHWAY")
+    c("SIG_IL4RECEPTOR_IN_B_LYPHOCYTES", "KEGG_TGF_BETA_SIGNALING_PATHWAY")
     
 p_CALU3_HostVirusinput <- BarplotEnrichment(PathwaysSelect_CALU3_HostVirusinput, 
     Interesting_pathways_CALU3_HostVirusinput)
