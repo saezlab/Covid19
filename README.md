@@ -16,6 +16,13 @@ SARS-CoV-2.
 
 + **A549** alveolar cancer cell line: mock treated vs infected with SARS-CoV-2.   
 
++ A549 cell line does not express ACE2, the receptor used by SARS-CoV-2 to 
+penetrate into human cells. Therefore A549 were also transduced with ACE2 and 
+then mock treated or infected with SARS-CoV-2
+
++ Calu-3 human lung epithelial cancer cell line: mock treated vs 
+infected with SARS-CoV-2.  
+
 ## Scripts and Analysis
 
 We detail below the different scripts and analysis performed:

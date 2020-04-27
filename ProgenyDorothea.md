@@ -29,7 +29,7 @@ and in vivo systems"*
 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE147507>
 
 It uses the differential analysis results generated in the previous
-script to run **Progeny** and **Dorothea** for the two cell lines under
+script to run **Progeny** and **Dorothea** for the four cell lines under
 study:
 
   - Human lung epithelial cells (NHBE): mock treated vs infected with

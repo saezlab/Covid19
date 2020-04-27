@@ -30,7 +30,7 @@ and in vivo systems"*
 
 It uses the nodes from the **CARNIVAL** output to run an enrichment
 analysis. The enrichment is performed for the different situations in
-which **CARNIVAL** was executed for the two condiitons under study:
+which **CARNIVAL** was executed for the four condiitons under study:
 
   - Human lung epithelial cells (NHBE): mock treated vs infected with
     SARS-CoV-2.

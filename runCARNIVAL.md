@@ -32,7 +32,8 @@ It uses the pathway activity scores from **Progeny** and the TFs
 activity scores from **Dorothea** obtained in the previous script to run
 **CARNIVAL**. In addition, CARNIVAL requires a prior knoledge network
 that would be obtained from **Omnipath** via OmnipathR. CARNIVAL is
-launched using different assumptions for the two condiitons under study:
+launched using different assumptions for the four condiitons under
+study:
 
   - Human lung epithelial cells (NHBE): mock treated vs infected with
     SARS-CoV-2.
