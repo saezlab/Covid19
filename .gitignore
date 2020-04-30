@@ -43,3 +43,15 @@ ResultsCARNIVAL/CALU3_noinputAttributes.txt
 ResultsCARNIVAL/NHBE_noInput.cys
 runCARNIVAL.html
 Calu3_CellCyclePhase.pdf
+RawData/human_periodic.tsv
+MyL22.txt
+RawData/human_periodic_tune.csv
+RawData/human_periodic_cellphase.csv
+normCountsCAlU3.txt
+CibersortMatrixCellPhase.R
+CIBERSORT.Output_CALU3.pdf
+CIBERSORT.Output_NHBE.pdf
+Covid19ProgenyPermutations.png
+IntermediateFiles/ExpressionCALU3_CIBER.txt
+IntermediateFiles/ExpressionNHBE_CIBER.txt
+IntermediateFiles/Signaturematrix_Periodic.txt

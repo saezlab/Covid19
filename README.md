@@ -48,10 +48,14 @@ the network used by Dezso from Tamas' group.
 
 <https://github.com/saezlab/Covid19/blob/master/runCARNIVAL.md>
 
-+ We finally perform a pathway enrichment analysis taking into account the nodes
++ We perform a pathway enrichment analysis taking into account the nodes
 from **CARNIVAL** output.
 
 <https://github.com/saezlab/Covid19/blob/master/CarnivalEnrichment.md>
+
++ We are also exploring the cell cycle phase of the different samples.
+
+<https://github.com/saezlab/Covid19/blob/master/CellCycleStage.md>
 
 ### License Info
 
