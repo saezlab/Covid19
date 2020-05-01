@@ -9,7 +9,8 @@ related datasets. In particular, we take the RNAseq data from the study:
 
 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE147507>
 
-We focused in the experiments containing these conditions:
+We first focused in analysing the effect of SARS-CoV-2 infection in different 
+human lung-related cells. 
 
 + Human lung epithelial cells (**NHBE**): mock treated vs infected with 
 SARS-CoV-2. 
@@ -23,9 +24,18 @@ and then mock treated or infected with SARS-CoV-2
 + **Calu-3** human lung epithelial cancer cell line: mock treated vs 
 infected with SARS-CoV-2.  
 
-## Scripts and Analysis
+Then, we analysed the effects at the transcriptomic level of different viral 
+infections:
 
-We detail below the different scripts and analysis performed:
++ A549 alveolar cancer cell line: mock treated vs infected with SARS-CoV-2.   
+
++ A549 alveolar cancer cell line: mock treated vs infected with RSV. 
+
++ A549 alveolar cancer cell line: mock treated vs infected with HPIV3.
+
+## Effect of SARS-CoV-2 infection in different cell lines
+
+We detail below the different scripts and analysis performed in this section:
 
 + We first applied a traditional differential expression analysis using the 
 **DESeq2** R package. This is aligned with the script of Agatha Treveil from 
@@ -56,6 +66,23 @@ from **CARNIVAL** output.
 + We are also exploring the cell cycle phase of the different samples.
 
 <https://github.com/saezlab/Covid19/blob/master/CellCycleStage.md>
+
+## Effect of different viral infections on A549 cell line
+
+We detail below the different scripts and analysis performed in this section:
+
++ We first applied a traditional differential expression analysis using the 
+**DESeq2** R package: 
+
+<https://github.com/saezlab/Covid19/blob/master/ComparativeInfection/DifferentialExpressionAnalysis.md> 
+
++ Then, we used the normalised counts and the stastics generated in the previous 
+script to run **Dorothea** and **Progeny**. Doing so, we estimated Transcription
+factors activity and pathway activity in the SARS-CoV-2 infected lines in 
+comparison with the mock treated. 
+
+<https://github.com/saezlab/Covid19/blob/master/ComparativeInfection/ProgenyDorothea.md>
+
 
 ### License Info
 
