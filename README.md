@@ -83,6 +83,19 @@ comparison with the mock treated.
 
 <https://github.com/saezlab/Covid19/blob/master/ComparativeInfection/ProgenyDorothea.md>
 
++ We run **CARNIVAL** using different perturbations conditions related 
+to the virus action. In order to do so, we used TF and Pathway activity scores 
+generated in the previous script. CARNIVAL also requires a prior knowledge 
+network that was extracted from **Omnipath** using **OmnipathR** in line with
+the network used by Dezso from Tamas' group. 
+
+<https://github.com/saezlab/Covid19/blob/master/ComparativeInfection/runCARNIVAL.md>
+
++ We perform a pathway enrichment analysis taking into account the nodes
+from **CARNIVAL** output.
+
+<https://github.com/saezlab/Covid19/blob/master/ComparativeInfection/CarnivalEnrichment.md>
+
 
 ### License Info
 
