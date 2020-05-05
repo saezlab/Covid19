@@ -3,6 +3,7 @@ title: "SARS-CoV-2 vs RSV vs HPIV3: Enrichment of CARNIVAL results"
 author: "Alberto Valdeolivas: alberto.valdeolivas@bioquant.uni-heidelberg.de; Date: "
 date: "04/05/2020"
 output: github_document
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE, warning=FALSE}
@@ -64,6 +65,8 @@ library(piano)
 library(dplyr)
 library(ggplot2)
 library(omicToolsTest)
+library(limma)
+library(kableExtra)
 
 ## Function to extract the nodes that appear in CARNIVAL network and the 
 ## background genes (all genes present in the prior knowledge network).
@@ -324,6 +327,55 @@ p_A549vsHPIV3_noinput <- BarplotEnrichment(PathwaysSelect_A549vsHPIV3_noinput,
 p_A549vsHPIV3_noinput
 ```
 
+### Pathways with different behaviour in SARS-CoV-2 and the other infections
+
+We now compare the enrichment results of the SARS-CoV-2 VS the other two viral
+infections (HPIV3 and RSV) in order to identify specific deregulated pathways
+during SARS-CoV-2 infection. To do so, we take the -log10 pvalue of the previous
+enrichment analysis for our three conditions and we perform a limma test. We
+display below the top 50 deregulated pathways between SARS-CoV-2 infection 
+on one hand and RSV-HPIV3 infections in the other hand.  
+
+```{r, warning=FALSE, message=FALSE}
+## We collect 
+AllEnrichments_noinput <- bind_cols(
+    sig_pathways_df_A549vsCOV2_noinput %>% 
+        tibble::rownames_to_column(var = "Pathway") %>% 
+        dplyr::mutate(Log10pValue_COV2 = -log10(`p-value`)) %>% 
+        dplyr::select(Pathway, Log10pValue_COV2),
+    sig_pathways_df_A549vsRSV_noinput  %>% 
+        dplyr::mutate(Log10pValue_RSV = -log10(`p-value`)) %>% 
+        dplyr::select(Log10pValue_RSV),
+    sig_pathways_df_A549vsHPIV3_noinput  %>% 
+        dplyr::mutate(Log10pValue_HPIV3 = -log10(`p-value`)) %>% 
+        dplyr::select(Log10pValue_HPIV3)) %>% 
+    dplyr::filter(!(Log10pValue_COV2 == 0 & Log10pValue_RSV == 0 & Log10pValue_HPIV3 == 0)) %>% 
+    tibble::column_to_rownames(var = "Pathway")
+# rownames(AllEnrichments_noinput) <- rownames(sig_pathways_df_A549vsCOV2_noinput)
+design <- cbind(Grp1=1,Grp2vs1=c(1,-1,-1))
+
+## Limma model
+fit_noinput <- lmFit(AllEnrichments_noinput,design)
+fit_noinput <- eBayes(fit_noinput)
+Results_noinput <- topTable(fit_noinput,number=50)
+
+## We tidy up the results and we include the p-values from the enrichments.
+Results_noinputLog10pvalue <- 
+    AllEnrichments_noinput[rownames(Results_noinput),] %>% 
+    tibble::rownames_to_column(var = "Pathway") %>%
+    dplyr::left_join((sig_pathways_df_A549vsCOV2_noinput %>% 
+        tibble::rownames_to_column(var = "Pathway"))) %>% 
+    dplyr::select(Pathway, Log10pValue_COV2, Log10pValue_RSV, 
+                  Log10pValue_HPIV3, `Adjusted p-value`) %>% 
+    dplyr::rename(AdjPvalue_COV2 = `Adjusted p-value`)
+## We presenth the results in a table
+knitr::kable(Results_noinputLog10pvalue,  digits = 3, longtable = TRUE, 
+    padding = 0) %>% 
+    kable_styling(bootstrap_options = 
+        c("striped", "hover", "condensed", "responsive"),
+        full_width = F, font_size = 8)
+```
+
 
 ### CARNIVAL output with perturbations on the RIG-I-like receptors
 
@@ -471,6 +523,55 @@ p_A549vsHPIV3_RIGIlike_receptors_input <-
 
 ```{r, fig.width=12, fig.height=12, echo=FALSE, dip=300}
 p_A549vsHPIV3_RIGIlike_receptors_input
+```
+
+### Pathways with different behaviour in SARS-CoV-2 and the other infections
+
+We now compare the enrichment results of the SARS-CoV-2 VS the other two viral
+infections (HPIV3 and RSV) in order to identify specific deregulated pathways
+during SARS-CoV-2 infection. To do so, we take the -log10 pvalue of the previous
+enrichment analysis for our three conditions and we perform a limma test. We
+display below the top 50 deregulated pathways between SARS-CoV-2 infection 
+on one hand and RSV-HPIV3 infections in the other hand.  
+
+```{r, warning=FALSE, message=FALSE}
+## We collect 
+AllEnrichments_RIGIlike_receptors_input <- bind_cols(
+    sig_pathways_df_A549vsCOV2_RIGIlike_receptors_input %>% 
+        tibble::rownames_to_column(var = "Pathway") %>% 
+        dplyr::mutate(Log10pValue_COV2 = -log10(`p-value`)) %>% 
+        dplyr::select(Pathway, Log10pValue_COV2),
+    sig_pathways_df_A549vsRSV_RIGIlike_receptors_input  %>% 
+        dplyr::mutate(Log10pValue_RSV = -log10(`p-value`)) %>% 
+        dplyr::select(Log10pValue_RSV),
+    sig_pathways_df_A549vsHPIV3_RIGIlike_receptors_input  %>% 
+        dplyr::mutate(Log10pValue_HPIV3 = -log10(`p-value`)) %>% 
+        dplyr::select(Log10pValue_HPIV3)) %>% 
+    dplyr::filter(!(Log10pValue_COV2 == 0 & Log10pValue_RSV == 0 & Log10pValue_HPIV3 == 0)) %>% 
+    tibble::column_to_rownames(var = "Pathway")
+# rownames(AllEnrichments_RIGIlike_receptors_input) <- rownames(sig_pathways_df_A549vsCOV2_RIGIlike_receptors_input)
+design <- cbind(Grp1=1,Grp2vs1=c(1,-1,-1))
+
+## Limma model
+fit_RIGIlike_receptors_input <- lmFit(AllEnrichments_RIGIlike_receptors_input,design)
+fit_RIGIlike_receptors_input <- eBayes(fit_RIGIlike_receptors_input)
+Results_RIGIlike_receptors_input <- topTable(fit_RIGIlike_receptors_input,number=50)
+
+## We tidy up the results and we include the p-values from the enrichments.
+Results_RIGIlike_receptors_inputLog10pvalue <- 
+    AllEnrichments_RIGIlike_receptors_input[rownames(Results_RIGIlike_receptors_input),] %>% 
+    tibble::rownames_to_column(var = "Pathway") %>%
+    dplyr::left_join((sig_pathways_df_A549vsCOV2_RIGIlike_receptors_input %>% 
+        tibble::rownames_to_column(var = "Pathway"))) %>% 
+    dplyr::select(Pathway, Log10pValue_COV2, Log10pValue_RSV, 
+                  Log10pValue_HPIV3, `Adjusted p-value`) %>% 
+    dplyr::rename(AdjPvalue_COV2 = `Adjusted p-value`)
+## We presenth the results in a table
+knitr::kable(Results_RIGIlike_receptors_inputLog10pvalue,  digits = 3, longtable = TRUE, 
+    padding = 0) %>% 
+    kable_styling(bootstrap_options = 
+        c("striped", "hover", "condensed", "responsive"),
+        full_width = F, font_size = 8)
 ```
 
 ## Session Info Details
