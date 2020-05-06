@@ -665,11 +665,11 @@ dorothea_hmap <- pheatmap(tf_activities_A549vsHPIV3_counts_filter,
 
 ![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
-### Comparison: Differential infection viral effects on Pathways activity
+### Comparison: Differential infection viral effects on TF activity
 
-We finally plot together the pathway activities under the three
-different viral infections. Again we also include the data from the
-previous A549 mock treated vs SARS-CoV-2 comparison (series2)
+We finally plot together the TF activities under the three different
+viral infections. Again we also include the data from the previous A549
+mock treated vs SARS-CoV-2 comparison (series2)
 
 ``` r
 tf_activities_A549vsCOV2_top25_series2 <- 

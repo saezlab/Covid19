@@ -393,6 +393,33 @@ ggplot(pathways_CALU3vsCOV2_zscore_df,aes(x = reorder(Pathway, NES), y = NES)) +
     xlab("Pathways")
 ```
 
+### Comparison: Pathway activity for SARS-CoV infection in different lines
+
+We finally plot together the pathway activities for the 4 different 
+cell lines. 
+
+```{r}
+AllInfections_Pathways <- bind_rows(pathways_NHBEvsCOV2_zscore_df,
+    pathways_A549vsCOV2_zscore_df, pathways_A549ACE2vsCOV2_zscore_df,
+    pathways_CALU3vsCOV2_zscore_df) %>% 
+    tibble::add_column(
+        Virus = c(rep("NHBE",14),rep("A549",14), 
+                  rep("A549_ACE2",14), rep("CALU-3",14)))
+```
+```{r, dpi=300}
+ggplot(AllInfections_Pathways,aes(x = Pathway, y = NES)) + 
+    geom_bar(aes(fill = NES), stat = "identity") +
+    facet_wrap(~Virus, ncol = 2, nrow = 2) +
+    scale_fill_gradient2(low = "darkblue", high = "darkred", 
+        mid = "white", midpoint = 0) + 
+    theme(axis.title = element_text(face = "bold", size = 12),
+        axis.text.x = 
+            element_text(angle = 45, hjust = 1, size =8, face= "bold"),
+        axis.text.y = element_text(size =10, face= "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+    xlab("Pathways") 
+```
 
 ## Transcription Factor activity with Dorothea and Viper
 
@@ -741,9 +768,38 @@ dorothea_hmap <- pheatmap(tf_activities_CALU3vsCOV2_counts_filter,
 ```
 
 
+### Comparison: TF activity for SARS-CoV infection in different lines
+
+We finally plot together the pathway activities for the 4 different 
+cell lines.
+
+```{r, message=FALSE, warning=FALSE}
+AllInfections_TFs <- bind_rows(tf_activities_NHBEvsCOV2_top25,
+    tf_activities_A549vsCOV2_top25, tf_activities_A549ACE2vsCOV2_top25,
+    tf_activities_CALU3vsCOV2_top25) %>% 
+    tibble::add_column(
+        Virus = c(rep("NHBE",25),rep("A549",25),
+            rep("A549_ACE2",25),rep("CALU-3",25)))
+```
+```{r, dpi=300}
+ggplot(AllInfections_TFs,aes(x = GeneID, y = NES)) + 
+    geom_bar(aes(fill = NES), stat = "identity") +
+    facet_wrap(~Virus,drop= FALSE, nrow = 2, ncol=2) +
+    scale_fill_gradient2(low = "darkblue", high = "darkred", 
+        mid = "white", midpoint = 0) + 
+    theme(axis.title = element_text(face = "bold", size = 12),
+        axis.text.x = 
+            element_text(angle = 90, hjust = 1, size =5),
+        axis.text.y = element_text(size =10, face= "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) 
+```
+
+
+
 ### Saving Results 
 
-```{r}
+```{r, eval=FALSE}
 saveRDS(pathways_NHBEvsCOV2_counts, 
     file = "IntermediateFiles/pathways_NHBEvsCOV2_counts.rds")
 saveRDS(pathways_NHBEvsCOV2_zscore, 

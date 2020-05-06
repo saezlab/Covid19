@@ -616,9 +616,9 @@ dorothea_hmap <- pheatmap(tf_activities_A549vsHPIV3_counts_filter,
     treeheight_col = 0,  border_color = NA)
 ```
 
-### Comparison: Differential infection viral effects on Pathways activity  
+### Comparison: Differential infection viral effects on TF activity  
 
-We finally plot together the pathway activities under the three different 
+We finally plot together the TF activities under the three different 
 viral infections. Again we also include the data from the previous A549 mock
 treated vs SARS-CoV-2 comparison (series2)
 
@@ -656,7 +656,7 @@ ggplot(AllInfections_TFs,aes(x = GeneID, y = NES)) +
 
 ### Saving Results 
 
-```{r}
+```{r, eval = FALSE}
 saveRDS(pathways_A549vsCOV2_counts, 
     file = "IntermediateFiles/pathways_A549vsCOV2_counts.rds")
 saveRDS(pathways_A549vsCOV2_zscore,

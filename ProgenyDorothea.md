@@ -425,6 +425,37 @@ ggplot(pathways_CALU3vsCOV2_zscore_df,aes(x = reorder(Pathway, NES), y = NES)) +
 
 ![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
+### Comparison: Pathway activity for SARS-CoV infection in different lines
+
+We finally plot together the pathway activities for the 4 different cell
+lines.
+
+``` r
+AllInfections_Pathways <- bind_rows(pathways_NHBEvsCOV2_zscore_df,
+    pathways_A549vsCOV2_zscore_df, pathways_A549ACE2vsCOV2_zscore_df,
+    pathways_CALU3vsCOV2_zscore_df) %>% 
+    tibble::add_column(
+        Virus = c(rep("NHBE",14),rep("A549",14), 
+                  rep("A549_ACE2",14), rep("CALU-3",14)))
+```
+
+``` r
+ggplot(AllInfections_Pathways,aes(x = Pathway, y = NES)) + 
+    geom_bar(aes(fill = NES), stat = "identity") +
+    facet_wrap(~Virus, ncol = 2, nrow = 2) +
+    scale_fill_gradient2(low = "darkblue", high = "darkred", 
+        mid = "white", midpoint = 0) + 
+    theme(axis.title = element_text(face = "bold", size = 12),
+        axis.text.x = 
+            element_text(angle = 45, hjust = 1, size =8, face= "bold"),
+        axis.text.y = element_text(size =10, face= "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+    xlab("Pathways") 
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+
 ## Transcription Factor activity with Dorothea and Viper
 
 Now, we estimate the transcription factor (TF) activity using the
@@ -492,7 +523,7 @@ ggplot(tf_activities_NHBEvsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)) +
     xlab("Transcription Factors")
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 We now compute TFs activities per every sample (with the replicates)
 using the normalised counts. We display the results of the previous 25
@@ -532,7 +563,7 @@ dorothea_hmap <- pheatmap(tf_activities_NHBEvsCOV2_counts_filter,
     treeheight_col = 0,  border_color = NA)
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 ### A549 mock treated vs infected with SARS-CoV-2
 
@@ -581,7 +612,7 @@ ggplot(tf_activities_A549vsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)) +
     xlab("Transcription Factors")
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 We now compute TFs activities per every sample (with the replicates)
 using the normalised counts. We display the results of the previous 25
@@ -621,7 +652,7 @@ dorothea_hmap <- pheatmap(tf_activities_A549vsCOV2_counts_filter,
     treeheight_col = 0,  border_color = NA)
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 ### A549 transduced with ACE2 mock treated vs infected with SARS-CoV-2
 
@@ -670,7 +701,7 @@ ggplot(tf_activities_A549ACE2vsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)
     xlab("Transcription Factors")
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 We now compute TFs activities per every sample (with the replicates)
 using the normalised counts. We display the results of the previous 25
@@ -710,7 +741,7 @@ dorothea_hmap <- pheatmap(tf_activities_A549ACE2vsCOV2_counts_filter,
     treeheight_col = 0,  border_color = NA)
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
 ### CALU-3 mock treated vs infected with SARS-CoV-2
 
@@ -759,7 +790,7 @@ ggplot(tf_activities_CALU3vsCOV2_top25,aes(x = reorder(GeneID, NES), y = NES)) +
     xlab("Transcription Factors")
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
 
 We now compute TFs activities per every sample (with the replicates)
 using the normalised counts. We display the results of the previous 25
@@ -799,7 +830,37 @@ dorothea_hmap <- pheatmap(tf_activities_CALU3vsCOV2_counts_filter,
     treeheight_col = 0,  border_color = NA)
 ```
 
-![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-45-1.png)<!-- -->
+
+### Comparison: TF activity for SARS-CoV infection in different lines
+
+We finally plot together the pathway activities for the 4 different cell
+lines.
+
+``` r
+AllInfections_TFs <- bind_rows(tf_activities_NHBEvsCOV2_top25,
+    tf_activities_A549vsCOV2_top25, tf_activities_A549ACE2vsCOV2_top25,
+    tf_activities_CALU3vsCOV2_top25) %>% 
+    tibble::add_column(
+        Virus = c(rep("NHBE",25),rep("A549",25),
+            rep("A549_ACE2",25),rep("CALU-3",25)))
+```
+
+``` r
+ggplot(AllInfections_TFs,aes(x = GeneID, y = NES)) + 
+    geom_bar(aes(fill = NES), stat = "identity") +
+    facet_wrap(~Virus,drop= FALSE, nrow = 2, ncol=2) +
+    scale_fill_gradient2(low = "darkblue", high = "darkred", 
+        mid = "white", midpoint = 0) + 
+    theme(axis.title = element_text(face = "bold", size = 12),
+        axis.text.x = 
+            element_text(angle = 90, hjust = 1, size =5),
+        axis.text.y = element_text(size =10, face= "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) 
+```
+
+![](ProgenyDorothea_files/figure-gfm/unnamed-chunk-47-1.png)<!-- -->
 
 ### Saving Results
 
@@ -880,7 +941,7 @@ saveRDS(tf_activities_CALU3vsCOV2_counts,
     ## [11] BiocGenerics_0.32.0         pheatmap_1.0.12            
     ## [13] ggplot2_3.3.0               dplyr_0.8.5                
     ## [15] tidyr_1.0.2                 tibble_3.0.0               
-    ## [17] dorothea_0.99.5             progeny_1.9.6              
+    ## [17] dorothea_0.99.5             progeny_1.9.7              
     ## [19] devtools_2.2.2              usethis_1.5.1              
     ## 
     ## loaded via a namespace (and not attached):
