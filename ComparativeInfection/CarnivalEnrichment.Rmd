@@ -67,6 +67,7 @@ library(ggplot2)
 library(omicToolsTest)
 library(limma)
 library(kableExtra)
+library(tidyr)
 
 ## Function to extract the nodes that appear in CARNIVAL network and the 
 ## background genes (all genes present in the prior knowledge network).
@@ -113,6 +114,46 @@ BarplotEnrichment <- function(PathwaysSelect, Interesting_pathways){
         xlab("")
     return(p)
 }    
+
+## Wrapper to run the function runGSAhyper from the piano package with
+## permutations, in order to allow us to generate a Fold change for the 
+## enrichments. 
+runGSAhyperPerm <- function (nodesSucesses, nodesBackground, nperm=1000, 
+    gscFile){
+    
+    numberGenesSucesses <- length(nodesSucesses) 
+    nodesBackgroundList <- 
+        replicate(nperm, base::sample(nodesBackground,numberGenesSucesses),
+                  simplify = FALSE)
+    resultsRandom <- lapply(nodesBackgroundList, function(x) {
+        res <- runGSAhyper(genes = x, universe = nodesBackground, 
+        gsc = gscFile)
+        res <- res$resTab[,3]
+    })
+    resultsRandom_vector <- unlist(resultsRandom)
+    resultsRandom_df <- data.frame(
+        pathwayName = names(results_vector),
+        overlapGenes = results_vector,
+        stringsAsFactors = FALSE) %>% 
+        dplyr::group_by(pathwayName) %>% 
+        dplyr::summarise(avg = mean(overlapGenes))
+    resultsReal <- runGSAhyper(genes = nodesSucesses, 
+        universe = nodesBackground, gsc=gscFile)
+    resultsRealvsRandom<- resultsReal$resTab %>% 
+        as.data.frame() %>% 
+        tibble::rownames_to_column(var = "pathwayName") %>% 
+        dplyr::select('pathwayName','p-value', 'Adjusted p-value', 
+            'Significant (in gene set)') %>% 
+        dplyr::left_join(resultsRandom_df) %>%
+        dplyr::rename(pValue = 'p-value', AdjPvalue = 'Adjusted p-value' ,
+                      OverlapGeneSet = 'Significant (in gene set)', 
+                      AverageRandomSampling = 'avg') %>% 
+        dplyr::mutate(FoldChange = OverlapGeneSet/AverageRandomSampling, 
+                      Log10pValue = -log10(pValue)) %>% 
+        tidyr::replace_na(list(FoldChange =0)) %>% 
+        dplyr::arrange(desc(Log10pValue), desc(FoldChange))
+    return(resultsRealvsRandom)
+}
 ```
 
 ### Reading and formatting CARNIVAL output
@@ -331,38 +372,52 @@ p_A549vsHPIV3_noinput
 
 We now compare the enrichment results of the SARS-CoV-2 VS the other two viral
 infections (HPIV3 and RSV) in order to identify specific deregulated pathways
-during SARS-CoV-2 infection. To do so, we take the -log10 pvalue of the previous
-enrichment analysis for our three conditions and we perform a limma test. We
-display below the top 50 deregulated pathways between SARS-CoV-2 infection 
-on one hand and RSV-HPIV3 infections in the other hand.  
+during SARS-CoV-2 infection. To do so, we generate a Fold Change by running 
+the hypergeometric test with permutations for our three conditions. On this 
+Fold change, we perform a limma test. We display below the top 50 deregulated 
+pathways between SARS-CoV-2 infection on one hand and RSV-HPIV3 infections in 
+the other hand.  
 
 ```{r, warning=FALSE, message=FALSE}
-## We collect 
-AllEnrichments_noinput <- bind_cols(
-    sig_pathways_df_A549vsCOV2_noinput %>% 
-        tibble::rownames_to_column(var = "Pathway") %>% 
-        dplyr::mutate(Log10pValue_COV2 = -log10(`p-value`)) %>% 
-        dplyr::select(Pathway, Log10pValue_COV2),
-    sig_pathways_df_A549vsRSV_noinput  %>% 
-        dplyr::mutate(Log10pValue_RSV = -log10(`p-value`)) %>% 
-        dplyr::select(Log10pValue_RSV),
-    sig_pathways_df_A549vsHPIV3_noinput  %>% 
-        dplyr::mutate(Log10pValue_HPIV3 = -log10(`p-value`)) %>% 
-        dplyr::select(Log10pValue_HPIV3)) %>% 
-    dplyr::filter(!(Log10pValue_COV2 == 0 & Log10pValue_RSV == 0 & Log10pValue_HPIV3 == 0)) %>% 
-    tibble::column_to_rownames(var = "Pathway")
+## We run the hypergeometric text with permutations to generate a Fold change 
+Pathways_FC_A549vsCOV2_noinput <- 
+    runGSAhyperPerm(nodesSucesses = NodesA549vsCOV2_noinput$sucesses, 
+        nodesBackground = NodesA549vsCOV2_noinput$bg, nperm = 100, 
+        gscFile = loadGSC(pathways))
+Pathways_FC_A549vsRSV_noinput <- 
+    runGSAhyperPerm(nodesSucesses = NodesA549vsRSV_noinput$sucesses, 
+        nodesBackground = NodesA549vsRSV_noinput$bg, nperm = 100, 
+        gscFile = loadGSC(pathways))
+Pathways_FC_A549vsHPIV3_noinput <- 
+    runGSAhyperPerm(nodesSucesses = NodesA549vsHPIV3_noinput$sucesses, 
+        nodesBackground = NodesA549vsHPIV3_noinput$bg, nperm = 100, 
+        gscFile = loadGSC(pathways))    
+
+AllEnrichmentsFC_noinput <- 
+    dplyr::left_join(
+    (dplyr::select(Pathways_FC_A549vsCOV2_noinput, pathwayName, FoldChange) %>%
+    dplyr::rename(FoldChangeCOV2= "FoldChange")), 
+    (dplyr::select(Pathways_FC_A549vsRSV_noinput, pathwayName, FoldChange) %>%
+    dplyr::rename(FoldChangeRSV= "FoldChange"))) %>%
+    dplyr::left_join(
+        (dplyr::select(Pathways_FC_A549vsHPIV3_noinput, pathwayName, FoldChange) %>% 
+        dplyr::rename(FoldChangeHPIV3= "FoldChange"))) %>% 
+    dplyr::filter(!(FoldChangeCOV2 == 0 & FoldChangeRSV == 0 & FoldChangeHPIV3 == 0)) %>% 
+    tibble::column_to_rownames(var = "pathwayName")
+
 # rownames(AllEnrichments_noinput) <- rownames(sig_pathways_df_A549vsCOV2_noinput)
-design <- cbind(Grp1=1,Grp2vs1=c(1,-1,-1))
+design <- cbind(Grp1=c(1,1,1),Grp2vs1=c(1,-1,-1))
+
 
 ## Limma model
-fit_noinput <- lmFit(AllEnrichments_noinput,design)
+fit_noinput <- lmFit(AllEnrichmentsFC_noinput,design)
 fit_noinput <- eBayes(fit_noinput)
 Results_noinput <- topTable(fit_noinput,number=50)
 
 ## We tidy up the results and we include the p-values from the enrichments.
-Results_noinputLog10pvalue <- 
-    AllEnrichments_noinput[rownames(Results_noinput),] %>% 
-    tibble::rownames_to_column(var = "Pathway") %>%
+Results_noinput_FC <- 
+    AllEnrichmentsFC_noinput[rownames(Results_noinput),] %>% 
+    tibble::rownames_to_column(var = "pathwayName") %>%
     dplyr::left_join((sig_pathways_df_A549vsCOV2_noinput %>% 
         tibble::rownames_to_column(var = "Pathway"))) %>% 
     dplyr::select(Pathway, Log10pValue_COV2, Log10pValue_RSV, 

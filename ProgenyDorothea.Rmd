@@ -412,14 +412,15 @@ ggplot(AllInfections_Pathways,aes(x = Pathway, y = NES)) +
     facet_wrap(~CellLine, ncol = 2, nrow = 2) +
     scale_fill_gradient2(low = "darkblue", high = "darkred", 
         mid = "white", midpoint = 0) + 
-    theme(axis.title = element_text(face = "bold", size = 12),
+    theme_classic() +
+    theme(axis.title = element_text(face = "bold", size = 14),
         axis.text.x = 
-            element_text(angle = 45, hjust = 1, size =8, face= "bold"),
-        axis.text.y = element_text(size =10, face= "bold"),
+            element_text(angle = 90, hjust = 1, size =8),
+        axis.text.y = element_text(size =8),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank()) +
     xlab("Pathways") 
-```
+ ```
 
 ## Transcription Factor activity with Dorothea and Viper
 
@@ -778,13 +779,13 @@ AllInfections_TFs <- bind_rows(tf_activities_NHBEvsCOV2_top25,
     tf_activities_A549vsCOV2_top25, tf_activities_A549ACE2vsCOV2_top25,
     tf_activities_CALU3vsCOV2_top25) %>% 
     tibble::add_column(
-        Virus = c(rep("NHBE",25),rep("A549",25),
+        CellLine = c(rep("NHBE",25),rep("A549",25),
             rep("A549_ACE2",25),rep("CALU-3",25)))
 ```
 ```{r, dpi=300}
 ggplot(AllInfections_TFs,aes(x = GeneID, y = NES)) + 
     geom_bar(aes(fill = NES), stat = "identity") +
-    facet_wrap(~Virus,drop= FALSE, nrow = 2, ncol=2) +
+    facet_wrap(~CellLine,drop= FALSE, nrow = 2, ncol=2) +
     scale_fill_gradient2(low = "darkblue", high = "darkred", 
         mid = "white", midpoint = 0) + 
     theme(axis.title = element_text(face = "bold", size = 12),
@@ -795,7 +796,138 @@ ggplot(AllInfections_TFs,aes(x = GeneID, y = NES)) +
         panel.grid.minor = element_blank()) 
 ```
 
+The previous plot is not very clear. Then and since we aim at focusing on the 
+effect SARS-CoV-2 infection regardless of the cell line, we selected those TFs 
+that are among the top active/unactive in every cell line.
 
+```{r}
+### I am going to select the top 75 up & down separated
+
+## NHBE
+tf_activities_NHBEvsCOV2_top75_up <- tf_activities_NHBEvsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(75, wt = NES) %>%
+    dplyr::arrange(desc(NES)) %>% 
+    pull(GeneID)
+
+tf_activities_NHBEvsCOV2_top75_down <- tf_activities_NHBEvsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(75, wt = -NES) %>%
+    dplyr::arrange(NES) %>% 
+     pull(GeneID)
+
+## A549
+tf_activities_A549vsCOV2_top75_up <- tf_activities_A549vsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(75, wt = NES) %>%
+    dplyr::arrange(desc(NES)) %>% 
+     pull(GeneID)
+
+tf_activities_A549vsCOV2_top75_down <- tf_activities_A549vsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(75, wt = -NES) %>%
+    dplyr::arrange(NES) %>% 
+    pull(GeneID)
+
+## A549 transduced with ACE2
+tf_activities_A549ACE2vsCOV2_top75_up <- tf_activities_A549ACE2vsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(75, wt = NES) %>%
+    dplyr::arrange(desc(NES)) %>% 
+    pull(GeneID)
+
+tf_activities_A549ACE2vsCOV2_top75_down <- tf_activities_A549ACE2vsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(75, wt = -NES) %>%
+    dplyr::arrange(NES) %>% 
+    pull(GeneID)
+
+## CALU3 
+tf_activities_CALU3vsCOV2_top75_up <- tf_activities_CALU3vsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(75, wt = NES) %>%
+    dplyr::arrange(desc(NES)) %>% 
+    pull(GeneID)
+
+tf_activities_CALU3vsCOV2_top75_down <- tf_activities_CALU3vsCOV2_stat %>%
+    as.data.frame() %>% 
+    rownames_to_column(var = "GeneID") %>%
+    dplyr::rename(NES = "stat") %>%
+    dplyr::top_n(75, wt = -NES) %>%
+    dplyr::arrange(NES) %>% 
+    pull(GeneID)
+
+TFscommon_up <- 
+  intersect(
+    intersect(
+      intersect(
+        tf_activities_NHBEvsCOV2_top75_up, 
+        tf_activities_A549vsCOV2_top75_up),
+        tf_activities_A549ACE2vsCOV2_top75_up), 
+        tf_activities_CALU3vsCOV2_top75_up)
+
+TFscommon_down <- intersect(
+  intersect(
+    intersect(
+      tf_activities_NHBEvsCOV2_top75_down, 
+      tf_activities_A549vsCOV2_top75_down),
+      tf_activities_A549ACE2vsCOV2_top75_down), 
+      tf_activities_CALU3vsCOV2_top75_down)
+
+TFscommon_up_down <- c(TFscommon_up,TFscommon_down)
+
+TFscommon_up_down_NES <- bind_rows(tf_activities_NHBEvsCOV2_stat %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "GeneID") %>%
+  dplyr::filter(GeneID %in% TFscommon_up_down) %>% 
+  tibble::add_column(CellLine = c(rep("NHBE",14))), 
+  tf_activities_A549vsCOV2_stat %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "GeneID") %>%
+  dplyr::filter(GeneID %in% TFscommon_up_down) %>% 
+  tibble::add_column(CellLine = c(rep("A549",14))),
+  tf_activities_A549ACE2vsCOV2_stat %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "GeneID") %>%
+  dplyr::filter(GeneID %in% TFscommon_up_down) %>% 
+  tibble::add_column(CellLine = c(rep("A549ACE2",14))),
+  tf_activities_CALU3vsCOV2_stat %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "GeneID") %>%
+  dplyr::filter(GeneID %in% TFscommon_up_down) %>% 
+  tibble::add_column(CellLine = c(rep("CALU3",14)))
+  ) %>% 
+    dplyr::rename(NES = "stat") 
+```
+```{r, dpi=300}
+ggplot(TFscommon_up_down_NES,aes(x = GeneID, y = NES)) + 
+    geom_bar(aes(fill = NES), stat = "identity") +
+    facet_wrap(~CellLine,drop= FALSE, nrow = 2, ncol=2) +
+    scale_fill_gradient2(low = "darkblue", high = "darkred", 
+        mid = "white", midpoint = 0) + 
+    theme_classic() +
+    theme(axis.title = element_text(face = "bold", size = 14),
+        axis.text.x = 
+            element_text(angle = 90, hjust = 1, size =8),
+        axis.text.y = element_text(size =8),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+        xlab("Transcription Factors")
+```
 
 ### Saving Results 
 
