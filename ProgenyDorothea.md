@@ -435,14 +435,14 @@ AllInfections_Pathways <- bind_rows(pathways_NHBEvsCOV2_zscore_df,
     pathways_A549vsCOV2_zscore_df, pathways_A549ACE2vsCOV2_zscore_df,
     pathways_CALU3vsCOV2_zscore_df) %>% 
     tibble::add_column(
-        Virus = c(rep("NHBE",14),rep("A549",14), 
+        CellLine = c(rep("NHBE",14),rep("A549",14), 
                   rep("A549_ACE2",14), rep("CALU-3",14)))
 ```
 
 ``` r
 ggplot(AllInfections_Pathways,aes(x = Pathway, y = NES)) + 
     geom_bar(aes(fill = NES), stat = "identity") +
-    facet_wrap(~Virus, ncol = 2, nrow = 2) +
+    facet_wrap(~CellLine, ncol = 2, nrow = 2) +
     scale_fill_gradient2(low = "darkblue", high = "darkred", 
         mid = "white", midpoint = 0) + 
     theme(axis.title = element_text(face = "bold", size = 12),
