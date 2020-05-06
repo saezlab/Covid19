@@ -420,7 +420,7 @@ ggplot(AllInfections_Pathways,aes(x = Pathway, y = NES)) +
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank()) +
     xlab("Pathways") 
- ```
+```
 
 ## Transcription Factor activity with Dorothea and Viper
 
