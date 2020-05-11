@@ -65,6 +65,7 @@ library(ggplot2)
 library(omicToolsTest)
 library(limma)
 library(kableExtra)
+library(tidyr)
 
 ## Function to extract the nodes that appear in CARNIVAL network and the 
 ## background genes (all genes present in the prior knowledge network).
@@ -336,7 +337,7 @@ deregulated pathways between SARS-CoV-2 infection on one hand and
 RSV-HPIV3 infections in the other hand.
 
 ``` r
-## We collect 
+## We run the hypergeometric text with permutations to generate a Fold change 
 AllEnrichments_noinput <- bind_cols(
     sig_pathways_df_A549vsCOV2_noinput %>% 
         tibble::rownames_to_column(var = "Pathway") %>% 
@@ -367,6 +368,7 @@ Results_noinputLog10pvalue <-
     dplyr::select(Pathway, Log10pValue_COV2, Log10pValue_RSV, 
                   Log10pValue_HPIV3, `Adjusted p-value`) %>% 
     dplyr::rename(AdjPvalue_COV2 = `Adjusted p-value`)
+
 ## We presenth the results in a table
 knitr::kable(Results_noinputLog10pvalue,  digits = 3, longtable = TRUE, 
     padding = 0) %>% 
@@ -2277,7 +2279,6 @@ deregulated pathways between SARS-CoV-2 infection on one hand and
 RSV-HPIV3 infections in the other hand.
 
 ``` r
-## We collect 
 AllEnrichments_RIGIlike_receptors_input <- bind_cols(
     sig_pathways_df_A549vsCOV2_RIGIlike_receptors_input %>% 
         tibble::rownames_to_column(var = "Pathway") %>% 
@@ -4090,10 +4091,11 @@ REACTOME\_VIRAL\_MESSENGER\_RNA\_SYNTHESIS
     ##  [5] matrixStats_0.56.0          Biobase_2.46.0             
     ##  [7] GenomicRanges_1.38.0        GenomeInfoDb_1.22.0        
     ##  [9] IRanges_2.20.1              S4Vectors_0.24.1           
-    ## [11] BiocGenerics_0.32.0         kableExtra_1.1.0           
-    ## [13] limma_3.42.0                omicToolsTest_0.1.0        
-    ## [15] ggplot2_3.3.0               dplyr_0.8.5                
-    ## [17] piano_2.2.0                 readr_1.3.1                
+    ## [11] BiocGenerics_0.32.0         tidyr_1.0.2                
+    ## [13] kableExtra_1.1.0            limma_3.42.0               
+    ## [15] omicToolsTest_0.1.0         ggplot2_3.3.0              
+    ## [17] dplyr_0.8.5                 piano_2.2.0                
+    ## [19] readr_1.3.1                
     ## 
     ## loaded via a namespace (and not attached):
     ##   [1] backports_1.1.5        Hmisc_4.4-0            fastmatch_1.1-0       
