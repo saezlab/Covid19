@@ -68,6 +68,7 @@ library(omicToolsTest)
 library(limma)
 library(kableExtra)
 library(tidyr)
+library(ggsci)
 
 ## Function to extract the nodes that appear in CARNIVAL network and the 
 ## background genes (all genes present in the prior knowledge network).
@@ -114,6 +115,145 @@ BarplotEnrichment <- function(PathwaysSelect, Interesting_pathways){
         xlab("")
     return(p)
 }    
+
+
+### We modify the runGSAhyper from Piano to make it return the odds ratio and
+### the confident level. 
+runGSAhyper_V2 <- function (genes, pvalues, pcutoff, universe, gsc, gsSizeLim = c(1, 
+    Inf), adjMethod = "fdr") 
+{
+    if (length(gsSizeLim) != 2) 
+        stop("argument gsSizeLim should be a vector of length 2")
+    if (missing(genes)) {
+        stop("argument genes is required")
+    }
+    else {
+        genes <- as.vector(as.matrix(genes))
+        if (!is(genes, "character")) 
+            stop("argument genes should be a character vector")
+        if (length(unique(genes)) != length(genes)) 
+            stop("argument genes should contain no duplicated entries")
+    }
+    if (missing(pvalues)) {
+        pvalues <- rep(0, length(genes))
+    }
+    else {
+        pvalues <- as.vector(as.matrix(pvalues))
+        if (!is(pvalues, "numeric")) 
+            stop("argument pvalues should be a numeric vector")
+        if (length(pvalues) != length(genes)) 
+            stop("argument pvalues should be the same length as argument genes")
+        if (max(pvalues) > 1 | min(pvalues) < 0) 
+            stop("pvalues need to lie between 0 and 1")
+    }
+    if (missing(pcutoff)) {
+        if (all(pvalues %in% c(0, 1))) {
+            pcutoff <- 0
+        }
+        else {
+            pcutoff <- 0.05
+        }
+    }
+    else {
+        if (length(pcutoff) != 1 & !is(pcutoff, "numeric")) 
+            stop("argument pcutoff should be a numeric of length 1")
+        if (max(pcutoff) > 1 | min(pcutoff) < 0) 
+            stop("argument pcutoff needs to lie between 0 and 1")
+    }
+    if (missing(gsc)) {
+        stop("argument gsc needs to be given")
+    }
+    else {
+        if (!is(gsc, "GSC")) 
+            stop("argument gsc should be of class GSC, as returned by the loadGSC function")
+    }
+    if (missing(universe)) {
+        if (!all(pvalues == 0)) {
+            universe <- genes
+            message("Using all genes in argument genes as universe.")
+        }
+        else {
+            universe <- unique(unlist(gsc$gsc))
+            message("Using all genes present in argument gsc as universe.")
+        }
+    }
+    else {
+        if (!is(universe, "character")) 
+            stop("argument universe should be a character vector")
+        if (!all(pvalues == 0)) 
+            stop("if universe is given, genes should be only the genes of interest, i.e. pvalues should all be set to 0.")
+    }
+    if (!all(unique(unlist(gsc$gsc)) %in% universe)) 
+        warning("there are genes in gsc that are not in the universe, these will be removed before analysis")
+    if (!all(genes %in% universe)) {
+        warning("not all genes given by argument genes are present in universe, these will be added to universe")
+        universe <- c(universe, genes[!genes %in% universe])
+    }
+    if (length(unique(universe)) != length(universe)) 
+        stop("argument universe should contain no duplicated entries")
+    tmp <- try(adjMethod <- match.arg(adjMethod, c("holm", "hochberg", 
+        "hommel", "bonferroni", "BH", "BY", "fdr", "none"), 
+        several.ok = FALSE), silent = TRUE)
+    if (is(tmp, "try-error")) {
+        stop("argument adjMethod set to unknown method")
+    }
+    pvalues[pvalues == 0] <- -1e-10
+    goi <- genes[pvalues < pcutoff]
+    if (length(goi) < 1) 
+        stop("no genes selected due to too strict pcutoff")
+    bg <- universe[!universe %in% goi]
+    gsc <- gsc$gsc
+    delInd <- vector()
+    for (i in 1:length(gsc)) {
+        gs <- gsc[[i]]
+        gs <- gs[gs %in% universe]
+        if (length(gs) < gsSizeLim[1] | length(gs) > gsSizeLim[2]) 
+            delInd <- c(delInd, i)
+        gsc[[i]] <- gs
+    }
+    gsc <- gsc[!c(1:length(gsc)) %in% delInd]
+    message(paste("Analyzing the overrepresentation of ", length(goi), 
+        " genes of interest in ", length(gsc), " gene sets, using a background of ", 
+        length(bg), " non-interesting genes.", sep = ""))
+    p <- rep(NA, length(gsc))
+    names(p) <- names(gsc)
+    estimate <- rep(NA, length(gsc))
+    names(estimate) <- names(gsc) 
+    Cinterval <- rep(NA, length(gsc))
+    names(Cinterval) <- names(gsc) 
+    padj <- rep(NA, length(gsc))
+    names(padj) <- names(gsc)
+    contTabList <- list()
+    resTab <- matrix(nrow = length(gsc), ncol = 8)
+    colnames(resTab) <- c("p-value", "Adjusted p-value", "Significant (in gene set)", 
+        "Non-significant (in gene set)", "Significant (not in gene set)", 
+        "Non-significant (not in gene set)", "OddsRatio","ConfidentInterval")
+    rownames(resTab) <- names(gsc)
+    for (i in 1:length(gsc)) {
+        gs <- gsc[[i]]
+        nogs <- universe[!universe %in% gs]
+        ctab <- rbind(c(sum(goi %in% gs), sum(goi %in% nogs)), 
+            c(sum(bg %in% gs), sum(bg %in% nogs)))
+        resultsfisher <- fisher.test(ctab, alternative = "greater")
+        p[i] <- resultsfisher$p.value
+        estimate[i] <- resultsfisher$estimate
+        Cinterval[i] <- resultsfisher$conf.int[1]
+        rownames(ctab) <- c("Significant", "Non-significant")
+        colnames(ctab) <- c("Genes in gene set", "Genes not in gene set")
+        contTabList[[i]] <- ctab
+        resTab[i, ] <- c(p[i], NA, sum(goi %in% gs), sum(bg %in% 
+            gs), sum(goi %in% nogs), sum(bg %in% nogs), estimate[i], Cinterval[i])
+    }
+    padj <- p.adjust(p, method = adjMethod)
+    resTab[, 2] <- padj
+    res <- list()
+    res$pvalues <- p
+    res$p.adj <- padj
+    res$resTab <- resTab
+    res$contingencyTable <- contTabList
+    res$gsc <- gsc
+    return(res)
+}
 
 ```
 
@@ -198,7 +338,7 @@ It uses Fisher's exact test.
 
 ```{r, message=FALSE, warning=FALSE}
 ## We run GSA hyper Geometric test
-sig_pathways_A549vsCOV2_noinput <- runGSAhyper(NodesA549vsCOV2_noinput$sucesses, 
+sig_pathways_A549vsCOV2_noinput <- runGSAhyper_V2(NodesA549vsCOV2_noinput$sucesses, 
     universe = NodesA549vsCOV2_noinput$bg, gsc = loadGSC(pathways))
 sig_pathways_df_A549vsCOV2_noinput <- 
     as.data.frame(sig_pathways_A549vsCOV2_noinput$resTab)
@@ -243,7 +383,7 @@ p_A549vsCOV2_noinput
 
 ```{r, message=FALSE, warning=FALSE}
 ## We run GSA hyper Geometric test
-sig_pathways_A549vsRSV_noinput <- runGSAhyper(NodesA549vsRSV_noinput$sucesses, 
+sig_pathways_A549vsRSV_noinput <- runGSAhyper_V2(NodesA549vsRSV_noinput$sucesses, 
     universe = NodesA549vsRSV_noinput$bg, gsc = loadGSC(pathways))
 sig_pathways_df_A549vsRSV_noinput <- 
     as.data.frame(sig_pathways_A549vsRSV_noinput$resTab)
@@ -288,7 +428,7 @@ p_A549vsRSV_noinput
 
 ```{r, message=FALSE, warning=FALSE}
 ## We run GSA hyper Geometric test
-sig_pathways_A549vsHPIV3_noinput <- runGSAhyper(NodesA549vsHPIV3_noinput$sucesses, 
+sig_pathways_A549vsHPIV3_noinput <- runGSAhyper_V2(NodesA549vsHPIV3_noinput$sucesses, 
     universe = NodesA549vsHPIV3_noinput$bg, gsc = loadGSC(pathways))
 sig_pathways_df_A549vsHPIV3_noinput <- 
     as.data.frame(sig_pathways_A549vsHPIV3_noinput$resTab)
@@ -333,26 +473,25 @@ p_A549vsHPIV3_noinput
 
 We now compare the enrichment results of the SARS-CoV-2 VS the other two
 viral infections (HPIV3 and RSV) in order to identify specific
-deregulated pathways during SARS-CoV-2 infection. To do so, we take the
--log10 pvalue of the previous enrichment analysis for our three
-conditions and we perform a limma test. We display below the top 50
-deregulated pathways between SARS-CoV-2 infection on one hand and
-RSV-HPIV3 infections in the other hand.
+deregulated pathways during SARS-CoV-2 infection. To do so, we use limma on the
+odds ratios from the fisher's exact test carried out in the previous 
+enrichments. We sort the results based on the larger difference in odds ratios 
+between conditions. In addition, we only consider the pathways that are 
+significantly enriched in any of the conditions (Adjusted p-value < 0.1). 
 
 ```{r, warning=FALSE, message=FALSE}
-## We run the hypergeometric text with permutations to generate a Fold change 
 AllEnrichments_noinput <- bind_cols(
     sig_pathways_df_A549vsCOV2_noinput %>% 
         tibble::rownames_to_column(var = "Pathway") %>% 
-        dplyr::mutate(Log10pValue_COV2 = -log10(`p-value`)) %>% 
-        dplyr::select(Pathway, Log10pValue_COV2),
+        dplyr::rename(OddsRatio_COV2 = "OddsRatio") %>% 
+        dplyr::select(Pathway, OddsRatio_COV2),
     sig_pathways_df_A549vsRSV_noinput  %>% 
-        dplyr::mutate(Log10pValue_RSV = -log10(`p-value`)) %>% 
-        dplyr::select(Log10pValue_RSV),
+        dplyr::rename(OddsRatio_RSV = "OddsRatio") %>% 
+        dplyr::select(OddsRatio_RSV),
     sig_pathways_df_A549vsHPIV3_noinput  %>% 
-        dplyr::mutate(Log10pValue_HPIV3 = -log10(`p-value`)) %>% 
-        dplyr::select(Log10pValue_HPIV3)) %>% 
-    dplyr::filter(!(Log10pValue_COV2 == 0 & Log10pValue_RSV == 0 & Log10pValue_HPIV3 == 0)) %>% 
+        dplyr::rename(OddsRatio_HPIV3 = "OddsRatio") %>% 
+        dplyr::select(OddsRatio_HPIV3)) %>% 
+    dplyr::filter(!(OddsRatio_COV2 == 0 & OddsRatio_RSV == 0 & OddsRatio_HPIV3 == 0)) %>% 
     tibble::column_to_rownames(var = "Pathway")
 # rownames(AllEnrichments_noinput) <- rownames(sig_pathways_df_A549vsCOV2_noinput)
 design <- cbind(Grp1=1,Grp2vs1=c(1,-1,-1))
@@ -360,26 +499,74 @@ design <- cbind(Grp1=1,Grp2vs1=c(1,-1,-1))
 ## Limma model
 fit_noinput <- lmFit(AllEnrichments_noinput,design)
 fit_noinput <- eBayes(fit_noinput)
-Results_noinput <- topTable(fit_noinput,number=50)
+Results_noinput <- topTable(fit_noinput, sort.by = "B",resort.by="AveExpr", 
+    number = 100)
 
 ## We tidy up the results and we include the p-values from the enrichments.
-Results_noinputLog10pvalue <- 
+Results_noinput_OddsRatio <- 
     AllEnrichments_noinput[rownames(Results_noinput),] %>% 
     tibble::rownames_to_column(var = "Pathway") %>%
     dplyr::left_join((sig_pathways_df_A549vsCOV2_noinput %>% 
         tibble::rownames_to_column(var = "Pathway"))) %>% 
-    dplyr::select(Pathway, Log10pValue_COV2, Log10pValue_RSV, 
-                  Log10pValue_HPIV3, `Adjusted p-value`) %>% 
-    dplyr::rename(AdjPvalue_COV2 = `Adjusted p-value`)
-
+    dplyr::select(Pathway, OddsRatio_COV2, OddsRatio_RSV, 
+                  OddsRatio_HPIV3, `Adjusted p-value`, `p-value`) %>% 
+    dplyr::rename(Adjpvalue_COV2 = "Adjusted p-value") %>% 
+    dplyr::rename(Pvalue_COV2 = "p-value") %>% 
+    dplyr::left_join((sig_pathways_df_A549vsRSV_noinput %>% 
+        tibble::rownames_to_column(var = "Pathway"))) %>% 
+    dplyr::select(Pathway, OddsRatio_COV2, OddsRatio_RSV, 
+        OddsRatio_HPIV3, Adjpvalue_COV2, Pvalue_COV2, `Adjusted p-value`, `p-value`) %>% 
+    dplyr::rename(Adjpvalue_RSV = "Adjusted p-value") %>% 
+    dplyr::rename(Pvalue_RSV = "p-value") %>%
+    dplyr::left_join((sig_pathways_df_A549vsHPIV3_noinput %>% 
+        tibble::rownames_to_column(var = "Pathway"))) %>% 
+    dplyr::select(Pathway, OddsRatio_COV2, OddsRatio_RSV, 
+        OddsRatio_HPIV3, Adjpvalue_COV2, Pvalue_COV2, Adjpvalue_RSV , Pvalue_RSV,
+        `Adjusted p-value`, `p-value`) %>% 
+    dplyr::rename(Adjpvalue_HPIV3 = "Adjusted p-value") %>%
+    dplyr::rename(Pvalue_HPIV3 = "p-value") %>%
+    dplyr::filter(Adjpvalue_COV2 < 0.1 | (Adjpvalue_RSV < 0.1 & Adjpvalue_HPIV3 <0.1))
+    
 ## We presenth the results in a table
-knitr::kable(Results_noinputLog10pvalue,  digits = 3, longtable = TRUE, 
+knitr::kable(Results_noinput_OddsRatio,  digits = 3, longtable = TRUE, 
     padding = 0) %>% 
     kable_styling(bootstrap_options = 
         c("striped", "hover", "condensed", "responsive"),
         full_width = F, font_size = 8)
 ```
 
+And we finally plot the results
+
+```{r, message=FALSE}
+df_to_plot_OddsRatios_noinput <- Results_noinput_OddsRatio %>% 
+    pivot_longer(cols = c(OddsRatio_COV2, OddsRatio_RSV,
+    OddsRatio_HPIV3), names_to = "Virus", values_to = "OddsRatio") %>% 
+    dplyr::select(Pathway, Virus, OddsRatio) %>%
+    dplyr::mutate(Virus = sub("OddsRatio_","", Virus))
+
+df_to_plot_Pvalues_noinput <- Results_noinput_OddsRatio %>% 
+    pivot_longer(cols = c(Pvalue_COV2, Pvalue_RSV,
+    Pvalue_HPIV3), names_to = "Virus", values_to = "Pvalues") %>% 
+    dplyr::select(Pathway, Virus, Pvalues) %>%
+    dplyr::mutate(Virus = sub("Pvalue_","", Virus))
+
+df_to_plot_noinput <- 
+    left_join(df_to_plot_OddsRatios_noinput, df_to_plot_Pvalues_noinput)
+
+PointPlot_noinput <- ggplot(df_to_plot_noinput, aes(Pathway, -log(Pvalues))) + 
+    geom_point(aes(color = Virus, size = OddsRatio)) + 
+    coord_flip() + 
+    theme_minimal() + 
+    theme(legend.position = "bottom",  legend.justification = "center") +
+    scale_color_lancet() +
+    theme(axis.text.x = element_text(hjust = 1, size =8),
+        axis.text.y = element_text(size =8),
+        panel.grid.minor = element_blank()) 
+```
+
+```{r, echo=FALSE, dip=300, fig.width=10}
+PointPlot_noinput
+```
 
 ### CARNIVAL output with perturbations on the RIG-I-like receptors
 
@@ -388,7 +575,7 @@ knitr::kable(Results_noinputLog10pvalue,  digits = 3, longtable = TRUE,
 ```{r, message=FALSE, warning=FALSE}
 ## We run GSA hyper Geometric test
 sig_pathways_A549vsCOV2_RIGIlike_receptors_input <- 
-runGSAhyper(NodesA549vsCOV2_RIGIlike_receptors_input$sucesses, 
+runGSAhyper_V2(NodesA549vsCOV2_RIGIlike_receptors_input$sucesses, 
     universe = NodesA549vsCOV2_RIGIlike_receptors_input$bg, 
     gsc = loadGSC(pathways))
 sig_pathways_df_A549vsCOV2_RIGIlike_receptors_input <- 
@@ -437,7 +624,7 @@ p_A549vsCOV2_RIGIlike_receptors_input
 ```{r, message=FALSE, warning=FALSE}
 ## We run GSA hyper Geometric test
 sig_pathways_A549vsRSV_RIGIlike_receptors_input <- 
-    runGSAhyper(NodesA549vsRSV_RIGIlike_receptors_input$sucesses, 
+    runGSAhyper_V2(NodesA549vsRSV_RIGIlike_receptors_input$sucesses, 
     universe = NodesA549vsRSV_RIGIlike_receptors_input$bg, 
     gsc = loadGSC(pathways))
 sig_pathways_df_A549vsRSV_RIGIlike_receptors_input <- 
@@ -485,7 +672,7 @@ p_A549vsRSV_RIGIlike_receptors_input
 
 ```{r, message=FALSE, warning=FALSE}
 ## We run GSA hyper Geometric test
-sig_pathways_A549vsHPIV3_RIGIlike_receptors_input <- runGSAhyper(NodesA549vsHPIV3_RIGIlike_receptors_input$sucesses, 
+sig_pathways_A549vsHPIV3_RIGIlike_receptors_input <- runGSAhyper_V2(NodesA549vsHPIV3_RIGIlike_receptors_input$sucesses, 
     universe = NodesA549vsHPIV3_RIGIlike_receptors_input$bg, 
     gsc = loadGSC(pathways))
 sig_pathways_df_A549vsHPIV3_RIGIlike_receptors_input <- 
@@ -533,25 +720,25 @@ p_A549vsHPIV3_RIGIlike_receptors_input
 
 We now compare the enrichment results of the SARS-CoV-2 VS the other two
 viral infections (HPIV3 and RSV) in order to identify specific
-deregulated pathways during SARS-CoV-2 infection. To do so, we take the
--log10 pvalue of the previous enrichment analysis for our three
-conditions and we perform a limma test. We display below the top 50
-deregulated pathways between SARS-CoV-2 infection on one hand and
-RSV-HPIV3 infections in the other hand. 
+deregulated pathways during SARS-CoV-2 infection. To do so, we use limma on the
+odds ratios from the fisher's exact test carried out in the previous 
+enrichments. We sort the results based on the larger difference in odds ratios 
+between conditions. In addition, we only consider the pathways that are 
+significantly enriched in any of the conditions (Adjusted p-value < 0.1). 
 
 ```{r, warning=FALSE, message=FALSE}
 AllEnrichments_RIGIlike_receptors_input <- bind_cols(
     sig_pathways_df_A549vsCOV2_RIGIlike_receptors_input %>% 
         tibble::rownames_to_column(var = "Pathway") %>% 
-        dplyr::mutate(Log10pValue_COV2 = -log10(`p-value`)) %>% 
-        dplyr::select(Pathway, Log10pValue_COV2),
+        dplyr::rename(OddsRatio_COV2 = "OddsRatio") %>% 
+        dplyr::select(Pathway, OddsRatio_COV2),
     sig_pathways_df_A549vsRSV_RIGIlike_receptors_input  %>% 
-        dplyr::mutate(Log10pValue_RSV = -log10(`p-value`)) %>% 
-        dplyr::select(Log10pValue_RSV),
+        dplyr::rename(OddsRatio_RSV = "OddsRatio") %>% 
+        dplyr::select(OddsRatio_RSV),
     sig_pathways_df_A549vsHPIV3_RIGIlike_receptors_input  %>% 
-        dplyr::mutate(Log10pValue_HPIV3 = -log10(`p-value`)) %>% 
-        dplyr::select(Log10pValue_HPIV3)) %>% 
-    dplyr::filter(!(Log10pValue_COV2 == 0 & Log10pValue_RSV == 0 & Log10pValue_HPIV3 == 0)) %>% 
+        dplyr::rename(OddsRatio_HPIV3 = "OddsRatio") %>% 
+        dplyr::select(OddsRatio_HPIV3)) %>% 
+    dplyr::filter(!(OddsRatio_COV2 == 0 & OddsRatio_RSV == 0 & OddsRatio_HPIV3 == 0)) %>% 
     tibble::column_to_rownames(var = "Pathway")
 # rownames(AllEnrichments_RIGIlike_receptors_input) <- rownames(sig_pathways_df_A549vsCOV2_RIGIlike_receptors_input)
 design <- cbind(Grp1=1,Grp2vs1=c(1,-1,-1))
@@ -559,23 +746,80 @@ design <- cbind(Grp1=1,Grp2vs1=c(1,-1,-1))
 ## Limma model
 fit_RIGIlike_receptors_input <- lmFit(AllEnrichments_RIGIlike_receptors_input,design)
 fit_RIGIlike_receptors_input <- eBayes(fit_RIGIlike_receptors_input)
-Results_RIGIlike_receptors_input <- topTable(fit_RIGIlike_receptors_input,number=50)
+Results_RIGIlike_receptors_input <- topTable(fit_RIGIlike_receptors_input, 
+    sort.by = "B",resort.by="AveExpr", number = 100)
 
 ## We tidy up the results and we include the p-values from the enrichments.
-Results_RIGIlike_receptors_inputLog10pvalue <- 
+Results_RIGIlike_receptors_input_OddsRatio <- 
     AllEnrichments_RIGIlike_receptors_input[rownames(Results_RIGIlike_receptors_input),] %>% 
     tibble::rownames_to_column(var = "Pathway") %>%
     dplyr::left_join((sig_pathways_df_A549vsCOV2_RIGIlike_receptors_input %>% 
         tibble::rownames_to_column(var = "Pathway"))) %>% 
-    dplyr::select(Pathway, Log10pValue_COV2, Log10pValue_RSV, 
-                  Log10pValue_HPIV3, `Adjusted p-value`) %>% 
-    dplyr::rename(AdjPvalue_COV2 = `Adjusted p-value`)
+    dplyr::select(Pathway, OddsRatio_COV2, OddsRatio_RSV, 
+                  OddsRatio_HPIV3, `Adjusted p-value`, `p-value`) %>% 
+    dplyr::rename(Adjpvalue_COV2 = "Adjusted p-value") %>% 
+    dplyr::rename(Pvalue_COV2 = "p-value") %>% 
+    dplyr::left_join((sig_pathways_df_A549vsRSV_RIGIlike_receptors_input %>% 
+        tibble::rownames_to_column(var = "Pathway"))) %>% 
+    dplyr::select(Pathway, OddsRatio_COV2, OddsRatio_RSV, 
+        OddsRatio_HPIV3, Adjpvalue_COV2, Pvalue_COV2, `Adjusted p-value`, `p-value`) %>% 
+    dplyr::rename(Adjpvalue_RSV = "Adjusted p-value") %>% 
+    dplyr::rename(Pvalue_RSV = "p-value") %>%
+    dplyr::left_join((sig_pathways_df_A549vsHPIV3_RIGIlike_receptors_input %>% 
+        tibble::rownames_to_column(var = "Pathway"))) %>% 
+    dplyr::select(Pathway, OddsRatio_COV2, OddsRatio_RSV, 
+        OddsRatio_HPIV3, Adjpvalue_COV2, Pvalue_COV2, Adjpvalue_RSV , Pvalue_RSV,
+        `Adjusted p-value`, `p-value`) %>% 
+    dplyr::rename(Adjpvalue_HPIV3 = "Adjusted p-value") %>%
+    dplyr::rename(Pvalue_HPIV3 = "p-value") %>%
+    dplyr::filter(Adjpvalue_COV2 < 0.1 | (Adjpvalue_RSV < 0.1 & Adjpvalue_HPIV3 <0.1))
+
+
 ## We presenth the results in a table
-knitr::kable(Results_RIGIlike_receptors_inputLog10pvalue,  digits = 3, longtable = TRUE, 
+knitr::kable(Results_RIGIlike_receptors_input_OddsRatio,  digits = 3, longtable = TRUE, 
     padding = 0) %>% 
     kable_styling(bootstrap_options = 
         c("striped", "hover", "condensed", "responsive"),
         full_width = F, font_size = 8)
+```
+
+And we finally plot the results
+
+```{r, message=FALSE}
+df_to_plot_OddsRatios_RIGIlike_receptors_input <- Results_RIGIlike_receptors_input_OddsRatio %>% 
+    pivot_longer(cols = c(OddsRatio_COV2, OddsRatio_RSV,
+    OddsRatio_HPIV3), names_to = "Virus", values_to = "OddsRatio") %>% 
+    dplyr::select(Pathway, Virus, OddsRatio) %>%
+    dplyr::mutate(Virus = sub("OddsRatio_","", Virus))
+
+df_to_plot_Pvalues_RIGIlike_receptors_input <- Results_RIGIlike_receptors_input_OddsRatio %>% 
+    pivot_longer(cols = c(Pvalue_COV2, Pvalue_RSV,
+    Pvalue_HPIV3), names_to = "Virus", values_to = "Pvalues") %>% 
+    dplyr::select(Pathway, Virus, Pvalues) %>%
+    dplyr::mutate(Virus = sub("Pvalue_","", Virus))
+
+df_to_plot_RIGIlike_receptors_input <- 
+    left_join(df_to_plot_OddsRatios_RIGIlike_receptors_input, 
+              df_to_plot_Pvalues_RIGIlike_receptors_input)
+
+## For now I am going to take out REACTOME_REGULATION_OF
+df_to_plot_RIGIlike_receptors_input <-
+    dplyr::filter(df_to_plot_RIGIlike_receptors_input, 
+    Pathway != "REACTOME_REGULATION_OF_GENE_EXPRESSION_IN_LATE_STAGE_BRANCHING_MORPHOGENESIS_PANCREATIC_BUD_PRECURSOR_CELLS")
+
+PointPlot_RIGIlike_receptors_input <- ggplot(df_to_plot_RIGIlike_receptors_input, aes(Pathway, -log(Pvalues))) + 
+    geom_point(aes(color = Virus, size = OddsRatio)) + 
+    coord_flip() + 
+    theme_minimal() + 
+    theme(legend.position = "bottom",  legend.justification = "center") +
+    scale_color_lancet() +
+    theme(axis.text.x = element_text(hjust = 1, size =8),
+        axis.text.y = element_text(size =8),
+        panel.grid.minor = element_blank()) 
+```
+
+```{r, echo=FALSE, dip=300, fig.width=10}
+PointPlot_RIGIlike_receptors_input
 ```
 
 ## Session Info Details
